@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+
+{% block title %}Catalog Statistics - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="stats-page">
+    <h1>Catalog Statistics</h1>
+    <p class="subtitle">Overview of the canonical wine database</p>
+
+    <div class="stats-grid">
+        <div class="stats-section">
+            <h2>Catalog Entities</h2>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_producers }}</span>
+                    <span class="stat-label">Producers</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_wines }}</span>
+                    <span class="stat-label">Wines</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_vintages }}</span>
+                    <span class="stat-label">Vintages</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_regions }}</span>
+                    <span class="stat-label">Regions</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_grapes }}</span>
+                    <span class="stat-label">Grape Varieties</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h2>Ingestion Pipeline</h2>
+            <div class="stats-cards">
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_sources }}</span>
+                    <span class="stat-label">Data Sources</span>
+                </div>
+                <div class="stat-card">
+                    <span class="stat-value">{{ stats.total_listings }}</span>
+                    <span class="stat-label">Listings Processed</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stats-section">
+            <h2>Search Index (Meilisearch)</h2>
+            {% if meilisearch_stats.available %}
+            <div class="stats-cards">
+                {% for index_name, index_stats in meilisearch_stats.indexes.items() %}
+                <div class="stat-card">
+                    <span class="stat-value">{{ index_stats.numberOfDocuments }}</span>
+                    <span class="stat-label">{{ index_name }}</span>
+                    {% if index_stats.isIndexing %}
+                    <span class="indexing-badge">Indexing...</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="warning">Meilisearch is not available. Search features may be limited.</p>
+            <p>Start Meilisearch with: <code>docker-compose up -d meilisearch</code></p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="/catalog" class="btn btn-primary">Back to Catalog</a>
+    </div>
+</div>
+{% endblock %}

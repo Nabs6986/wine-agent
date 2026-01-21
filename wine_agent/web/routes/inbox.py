@@ -194,6 +194,15 @@ async def inbox_convert(request: Request, item_id: str) -> Response:
     Returns:
         Redirect to the draft note view on success, or error page on failure.
     """
+    def _convert_in_thread(target_item_id: str):
+        from wine_agent.services.ai.conversion import ConversionService
+
+        with get_session() as thread_session:
+            service = ConversionService(thread_session)
+            result = service.convert_inbox_item(target_item_id)
+            thread_session.commit()
+            return result
+
     with get_session() as session:
         inbox_repo = InboxRepository(session)
         note_repo = TastingNoteRepository(session)
@@ -214,20 +223,15 @@ async def inbox_convert(request: Request, item_id: str) -> Response:
         # Try AI conversion if available
         if _ai_available():
             try:
-                from wine_agent.services.ai.conversion import ConversionService
-
-                service = ConversionService(session)
-                # Run synchronous AI call in thread pool to avoid blocking event loop
-                result = await asyncio.to_thread(service.convert_inbox_item, item_id)
+                # Run synchronous AI call in thread pool with its own session
+                result = await asyncio.to_thread(_convert_in_thread, item_id)
 
                 if result.success and result.tasting_note:
-                    session.commit()
                     return RedirectResponse(
                         url=f"/notes/draft/{result.tasting_note.id}", status_code=303
                     )
                 else:
                     # Conversion failed - show error on detail page
-                    session.commit()  # Save the failed conversion run
                     logger.warning(f"AI conversion failed: {result.error_message}")
 
                     # Get updated data for the detail page

@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{% if vintage %}Edit Vintage{% else %}New Vintage{% endif %} - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h1>{% if vintage %}Edit Vintage{% else %}Add New Vintage{% endif %}</h1>
+    {% if wine and producer %}
+    <p class="subtitle">Adding vintage for {{ wine.canonical_name }} by {{ producer.canonical_name }}</p>
+    {% else %}
+    <p class="subtitle">Create a canonical vintage entry</p>
+    {% endif %}
+
+    <form action="/catalog/vintages" method="post" class="entity-form">
+        {% if wine %}
+        <input type="hidden" name="wine_id" value="{{ wine.id }}">
+        {% else %}
+        <div class="form-section">
+            <div class="form-group">
+                <label for="wine_id">Wine ID *</label>
+                <input type="text" id="wine_id" name="wine_id"
+                       required placeholder="Enter wine UUID">
+                <p class="hint"><a href="/catalog/wines/new">Create a new wine</a> first if needed</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-section">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="year">Vintage Year *</label>
+                    <input type="number" id="year" name="year"
+                           value="{{ vintage.year if vintage else '' }}"
+                           required min="1900" max="2100" placeholder="e.g., 2019">
+                </div>
+
+                <div class="form-group">
+                    <label for="bottle_size_ml">Bottle Size (ml)</label>
+                    <select id="bottle_size_ml" name="bottle_size_ml">
+                        <option value="375" {% if vintage and vintage.bottle_size_ml == 375 %}selected{% endif %}>375ml (Half)</option>
+                        <option value="750" {% if not vintage or vintage.bottle_size_ml == 750 %}selected{% endif %}>750ml (Standard)</option>
+                        <option value="1500" {% if vintage and vintage.bottle_size_ml == 1500 %}selected{% endif %}>1500ml (Magnum)</option>
+                        <option value="3000" {% if vintage and vintage.bottle_size_ml == 3000 %}selected{% endif %}>3000ml (Jeroboam)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="abv">ABV (%)</label>
+                    <input type="number" id="abv" name="abv"
+                           value="{{ vintage.abv if vintage else '' }}"
+                           step="0.1" min="0" max="25" placeholder="e.g., 13.5">
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Vintage</button>
+            <a href="/catalog" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

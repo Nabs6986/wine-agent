@@ -1,0 +1,71 @@
+# Docker Compose configuration for Wine Agent infrastructure
+# This provides Meilisearch (search) and Redis (job queue) for the ingestion pipeline
+
+version: '3.8'
+
+services:
+  # Meilisearch - Search engine for canonical wine catalog
+  # Docs: https://www.meilisearch.com/docs
+  meilisearch:
+    image: getmeili/meilisearch:v1.6
+    container_name: wine_agent_meilisearch
+    ports:
+      - "7700:7700"
+    environment:
+      # Set a master key for production use
+      # For local dev, leaving it unset allows unauthenticated access
+      - MEILI_ENV=development
+      # Uncomment and set for production:
+      # - MEILI_MASTER_KEY=your-secure-master-key
+    volumes:
+      - meilisearch_data:/meili_data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis - Job queue for background ingestion tasks (arq)
+  # Docs: https://redis.io/docs
+  redis:
+    image: redis:7-alpine
+    container_name: wine_agent_redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    # Persistence configuration for job durability
+    command: redis-server --appendonly yes
+
+volumes:
+  meilisearch_data:
+    driver: local
+  redis_data:
+    driver: local
+
+# Usage:
+# ------
+# Start services:
+#   docker-compose up -d
+#
+# View logs:
+#   docker-compose logs -f
+#
+# Stop services:
+#   docker-compose down
+#
+# Reset data (caution - removes all indexed data!):
+#   docker-compose down -v
+#
+# Meilisearch dashboard:
+#   http://localhost:7700
+#
+# Redis CLI:
+#   docker exec -it wine_agent_redis redis-cli

@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}Wine Catalog - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="catalog-page">
+    <h1>Wine Catalog</h1>
+    <p class="subtitle">Search the canonical wine database</p>
+
+    <!-- Stats Summary -->
+    <div class="catalog-stats-bar">
+        <span class="stat-item">{{ stats.total_producers }} Producers</span>
+        <span class="stat-item">{{ stats.total_wines }} Wines</span>
+        <span class="stat-item">{{ stats.total_vintages }} Vintages</span>
+        <span class="stat-item">{{ stats.total_regions }} Regions</span>
+    </div>
+
+    <div class="catalog-layout">
+        <!-- Search Sidebar -->
+        <aside class="filters-sidebar">
+            <form action="/catalog" method="get" class="filters-form">
+                <div class="filter-section">
+                    <h3>Search</h3>
+                    <input type="text" name="q" value="{{ filters.q }}" placeholder="Search wines..." class="search-input">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Producer</h3>
+                    <input type="text" name="producer" value="{{ filters.producer }}" placeholder="Producer name">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Country</h3>
+                    <input type="text" name="country" value="{{ filters.country }}" placeholder="Country">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Region</h3>
+                    <input type="text" name="region" value="{{ filters.region }}" placeholder="Region">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Grape</h3>
+                    <input type="text" name="grape" value="{{ filters.grape }}" placeholder="Grape variety">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Vintage</h3>
+                    <input type="number" name="vintage" value="{{ filters.vintage or '' }}" placeholder="Year" min="1900" max="2100">
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="/catalog" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+
+            <div class="filter-section admin-links">
+                <h3>Manage Catalog</h3>
+                <a href="/catalog/producers/new" class="btn btn-small">+ Add Producer</a>
+                <a href="/catalog/wines/new" class="btn btn-small">+ Add Wine</a>
+                <a href="/catalog/stats" class="btn btn-small">View Stats</a>
+            </div>
+        </aside>
+
+        <!-- Results Area -->
+        <div class="results-area">
+            <div class="results-header">
+                <span class="results-count">{{ total_count }} result{% if total_count != 1 %}s{% endif %} found</span>
+            </div>
+
+            <div id="results-container">
+                {% include "catalog/results.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

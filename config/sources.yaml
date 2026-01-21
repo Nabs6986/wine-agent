@@ -1,0 +1,69 @@
+# Wine Agent Source Registry Configuration
+# =========================================
+# This file defines the sources (wine retailers, databases) that the
+# ingestion pipeline can crawl and extract data from.
+
+global:
+  # Default rate limiting settings for all sources
+  default_rate_limit:
+    requests_per_second: 1.0
+    burst_limit: 5
+
+  # User agent string for HTTP requests
+  user_agent: "WineAgent/0.1 (+https://github.com/wine-agent)"
+
+  # Where to store raw content snapshots
+  snapshot_storage_path: "~/.wine_agent/snapshots"
+
+  # Default request timeout in seconds
+  request_timeout: 30
+
+  # Maximum retries for failed requests
+  max_retries: 3
+
+# Entity resolution configuration
+entity_resolution:
+  thresholds:
+    # Confidence >= 0.90: auto-merge with existing entity
+    auto_merge: 0.90
+    # Confidence 0.70-0.89: add to review queue for manual verification
+    review_queue: 0.70
+    # Confidence < 0.70: create as new candidate entity
+
+# Source definitions
+sources:
+  # Test adapter for pipeline validation (no network calls)
+  - name: test-wines
+    domain: test.wineagent.local
+    adapter: test
+    enabled: true
+    description: "Mock data source for testing the ingestion pipeline"
+    rate_limit:
+      requests_per_second: 10.0
+      burst_limit: 20
+    # URL patterns to allow (regex)
+    allowlist:
+      - "^https://test\\.wineagent\\.local/wines/.*"
+    # URL patterns to deny (regex) - checked before allowlist
+    denylist: []
+
+  # Example configuration for a real wine retailer (disabled)
+  # - name: example-retailer
+  #   domain: example-wines.com
+  #   adapter: generic_ecommerce
+  #   enabled: false
+  #   description: "Example wine retailer"
+  #   rate_limit:
+  #     requests_per_second: 0.5
+  #     burst_limit: 3
+  #   allowlist:
+  #     - "^https://example-wines\\.com/products/.*"
+  #     - "^https://example-wines\\.com/collections/.*"
+  #   denylist:
+  #     - "^https://example-wines\\.com/account/.*"
+  #     - "^https://example-wines\\.com/cart/.*"
+  #   seed_urls:
+  #     - "https://example-wines.com/collections/all"
+  #   custom_config:
+  #     pagination_selector: ".pagination a.next"
+  #     product_selector: ".product-card a"

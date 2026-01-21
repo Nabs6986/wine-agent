@@ -5,6 +5,8 @@ from collections.abc import Generator
 from contextlib import contextmanager
 from pathlib import Path
 
+from alembic import command
+from alembic.config import Config
 from sqlalchemy import create_engine
 from sqlalchemy.orm import Session, sessionmaker
 
@@ -127,3 +129,21 @@ def init_db(db_path: Path | str | None = None) -> None:
 
     engine = get_engine(db_path)
     Base.metadata.create_all(bind=engine)
+
+
+def run_migrations(db_path: Path | str | None = None) -> None:
+    """
+    Run Alembic migrations to the latest revision.
+
+    Args:
+        db_path: Optional path to the database file.
+    """
+    project_root = Path(__file__).resolve().parents[2]
+    alembic_ini = project_root / "alembic.ini"
+
+    if not alembic_ini.exists():
+        raise FileNotFoundError(f"Alembic config not found: {alembic_ini}")
+
+    config = Config(str(alembic_ini))
+    config.set_main_option("sqlalchemy.url", get_database_url(db_path))
+    command.upgrade(config, "head")

@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
-from wine_agent.db.engine import init_db
+from wine_agent.db.engine import run_migrations
 
 # Load .env file from project root
 _project_root = Path(__file__).parent.parent.parent
@@ -26,18 +26,29 @@ def create_app() -> FastAPI:
         version="0.1.0",
     )
 
-    # Initialize database tables
-    init_db()
+    # Initialize database schema with migrations
+    run_migrations()
 
     # Mount static files
     app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
     # Include routers (import here to avoid circular imports)
-    from wine_agent.web.routes import analytics, calibration, export, flight, inbox, library, notes, settings
+    from wine_agent.web.routes import (
+        analytics,
+        calibration,
+        catalog,
+        export,
+        flight,
+        inbox,
+        library,
+        notes,
+        settings,
+    )
 
     app.include_router(inbox.router)
     app.include_router(notes.router)
     app.include_router(library.router)
+    app.include_router(catalog.router)
     app.include_router(export.router)
     app.include_router(analytics.router)
     app.include_router(calibration.router)

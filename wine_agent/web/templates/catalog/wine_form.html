@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}{% if wine %}Edit Wine{% else %}New Wine{% endif %} - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="form-page">
+    <h1>{% if wine %}Edit Wine{% else %}Add New Wine{% endif %}</h1>
+    {% if producer %}
+    <p class="subtitle">Adding wine for {{ producer.canonical_name }}</p>
+    {% else %}
+    <p class="subtitle">Create a canonical wine entry</p>
+    {% endif %}
+
+    <form action="/catalog/wines" method="post" class="entity-form">
+        {% if producer %}
+        <input type="hidden" name="producer_id" value="{{ producer.id }}">
+        {% else %}
+        <div class="form-section">
+            <div class="form-group">
+                <label for="producer_id">Producer ID *</label>
+                <input type="text" id="producer_id" name="producer_id"
+                       required placeholder="Enter producer UUID">
+                <p class="hint"><a href="/catalog/producers/new">Create a new producer</a> first if needed</p>
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="form-section">
+            <div class="form-group">
+                <label for="canonical_name">Wine Name / Cuvée *</label>
+                <input type="text" id="canonical_name" name="canonical_name"
+                       value="{{ wine.canonical_name if wine else '' }}"
+                       required placeholder="e.g., Richebourg Grand Cru">
+            </div>
+
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="color">Color</label>
+                    <select id="color" name="color">
+                        <option value="">Select...</option>
+                        <option value="red" {% if wine and wine.color == 'red' %}selected{% endif %}>Red</option>
+                        <option value="white" {% if wine and wine.color == 'white' %}selected{% endif %}>White</option>
+                        <option value="rose" {% if wine and wine.color == 'rose' %}selected{% endif %}>Rosé</option>
+                        <option value="orange" {% if wine and wine.color == 'orange' %}selected{% endif %}>Orange</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="style">Style</label>
+                    <select id="style" name="style">
+                        <option value="">Select...</option>
+                        <option value="still" {% if wine and wine.style == 'still' %}selected{% endif %}>Still</option>
+                        <option value="sparkling" {% if wine and wine.style == 'sparkling' %}selected{% endif %}>Sparkling</option>
+                        <option value="fortified" {% if wine and wine.style == 'fortified' %}selected{% endif %}>Fortified</option>
+                        <option value="dessert" {% if wine and wine.style == 'dessert' %}selected{% endif %}>Dessert</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="appellation">Appellation</label>
+                <input type="text" id="appellation" name="appellation"
+                       value="{{ wine.appellation if wine else '' }}"
+                       placeholder="e.g., Richebourg AOC">
+            </div>
+
+            <div class="form-group">
+                <label for="grapes">Grape Varieties (comma-separated)</label>
+                <input type="text" id="grapes" name="grapes"
+                       value="{{ wine.grapes | join(', ') if wine else '' }}"
+                       placeholder="e.g., Pinot Noir">
+            </div>
+
+            <div class="form-group">
+                <label for="aliases">Aliases (comma-separated)</label>
+                <input type="text" id="aliases" name="aliases"
+                       value="{{ wine.aliases | join(', ') if wine else '' }}"
+                       placeholder="Alternative names for this wine">
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Create Wine</button>
+            <a href="/catalog" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

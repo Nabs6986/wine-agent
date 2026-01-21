@@ -75,8 +75,11 @@ class PublishingService:
         current_revision = self.revision_repo.get_latest_revision_number(note_id)
         new_revision_number = current_revision + 1
 
-        # Create revision snapshot (empty previous for first publish)
-        previous_snapshot = {} if current_revision == 0 else note.model_dump(mode="json")
+        # Snapshot state before and after publishing for audit trail
+        previous_snapshot = note.model_dump(mode="json")
+
+        # Update note status
+        note.status = NoteStatus.PUBLISHED
         new_snapshot = note.model_dump(mode="json")
 
         revision = Revision(
@@ -87,9 +90,6 @@ class PublishingService:
             new_snapshot=new_snapshot,
             change_reason="Initial publication",
         )
-
-        # Update note status
-        note.status = NoteStatus.PUBLISHED
 
         # Save changes
         try:

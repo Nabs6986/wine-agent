@@ -19,11 +19,16 @@ for _env_path in _env_paths:
         load_dotenv(_env_path)
         break
 
+from wine_agent.cli.ingest import ingest_app
+
 app = typer.Typer(
     name="wine-agent",
     help="Wine Agent - A local-first app for capturing and managing wine tasting notes",
     add_completion=False,
 )
+
+# Add ingestion subcommands
+app.add_typer(ingest_app, name="ingest")
 
 
 def _check_ai_config() -> None:

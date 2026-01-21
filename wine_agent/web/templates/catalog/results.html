@@ -1,0 +1,77 @@
+{% if results %}
+<div class="results-list">
+    {% for result in results %}
+    <div class="result-card wine-card">
+        <div class="wine-header">
+            <h3 class="wine-name">{{ result.wine_name or result.get('wine_name', 'Unknown Wine') }}</h3>
+            {% if result.year %}
+            <span class="vintage-badge">{{ result.year }}</span>
+            {% endif %}
+        </div>
+        <div class="wine-details">
+            <p class="producer">{{ result.producer_name or result.get('producer_name', 'Unknown Producer') }}</p>
+            {% if result.region_name or result.country %}
+            <p class="origin">
+                {% if result.region_name %}{{ result.region_name }}{% endif %}
+                {% if result.region_name and result.country %}, {% endif %}
+                {% if result.country %}{{ result.country }}{% endif %}
+            </p>
+            {% endif %}
+            {% if result.appellation %}
+            <p class="appellation">{{ result.appellation }}</p>
+            {% endif %}
+            {% if result.grapes %}
+            <p class="grapes">
+                {% for grape in result.grapes %}
+                <span class="grape-tag">{{ grape }}</span>
+                {% endfor %}
+            </p>
+            {% endif %}
+            {% if result.color or result.style %}
+            <p class="wine-type">
+                {% if result.color %}{{ result.color }}{% endif %}
+                {% if result.color and result.style %} &middot; {% endif %}
+                {% if result.style %}{{ result.style }}{% endif %}
+            </p>
+            {% endif %}
+        </div>
+        <div class="wine-actions">
+            {% if result.vintage_id %}
+            <a href="/notes/new?vintage_id={{ result.vintage_id }}" class="btn btn-small btn-primary">Add Tasting</a>
+            {% elif result.wine_id %}
+            <a href="/notes/new?wine_id={{ result.wine_id }}" class="btn btn-small btn-primary">Add Tasting</a>
+            {% endif %}
+            {% if result.wine_id %}
+            <a href="/catalog/api/wines/{{ result.wine_id }}" class="btn btn-small">Details</a>
+            {% endif %}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<div class="pagination">
+    {% if page > 1 %}
+    <a href="?q={{ filters.q }}&producer={{ filters.producer }}&country={{ filters.country }}&region={{ filters.region }}&grape={{ filters.grape }}&vintage={{ filters.vintage or '' }}&page={{ page - 1 }}" class="btn btn-small">&laquo; Previous</a>
+    {% endif %}
+
+    <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+
+    {% if has_more %}
+    <a href="?q={{ filters.q }}&producer={{ filters.producer }}&country={{ filters.country }}&region={{ filters.region }}&grape={{ filters.grape }}&vintage={{ filters.vintage or '' }}&page={{ page + 1 }}" class="btn btn-small">Next &raquo;</a>
+    {% endif %}
+</div>
+{% endif %}
+
+{% else %}
+<div class="empty-state">
+    {% if filters.q or filters.producer or filters.country or filters.region %}
+    <p>No wines found matching your search criteria.</p>
+    <p><a href="/catalog">Clear filters</a> to see all wines.</p>
+    {% else %}
+    <p>The wine catalog is empty.</p>
+    <p>Get started by <a href="/catalog/producers/new">adding a producer</a>.</p>
+    {% endif %}
+</div>
+{% endif %}

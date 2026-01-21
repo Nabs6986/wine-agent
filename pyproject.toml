@@ -40,8 +40,16 @@ ai = [
     "anthropic>=0.40.0",
     "openai>=1.0.0",
 ]
+ingestion = [
+    "meilisearch>=0.31.0",
+    "arq>=0.26.0",
+    "redis>=5.0.0",
+    "httpx>=0.25.0",
+    "pyyaml>=6.0.0",
+    "rich>=13.0.0",
+]
 all = [
-    "wine-agent[dev,ai]",
+    "wine-agent[dev,ai,ingestion]",
 ]
 
 [project.scripts]

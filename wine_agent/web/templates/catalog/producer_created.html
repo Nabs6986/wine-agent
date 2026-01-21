@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+
+{% block title %}Producer Created - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="success-page">
+    <h1>Producer Created</h1>
+
+    <div class="success-message">
+        <p><strong>{{ producer.canonical_name }}</strong> has been added to the catalog.</p>
+    </div>
+
+    <div class="entity-details">
+        <dl>
+            <dt>ID</dt>
+            <dd><code>{{ producer.id }}</code></dd>
+
+            {% if producer.country %}
+            <dt>Country</dt>
+            <dd>{{ producer.country }}</dd>
+            {% endif %}
+
+            {% if producer.region %}
+            <dt>Region</dt>
+            <dd>{{ producer.region }}</dd>
+            {% endif %}
+
+            {% if producer.aliases %}
+            <dt>Aliases</dt>
+            <dd>{{ producer.aliases | join(', ') }}</dd>
+            {% endif %}
+        </dl>
+    </div>
+
+    <div class="next-actions">
+        <h3>What's next?</h3>
+        <a href="/catalog/wines/new?producer_id={{ producer.id }}" class="btn btn-primary">Add a Wine for this Producer</a>
+        <a href="/catalog/producers/new" class="btn btn-secondary">Add Another Producer</a>
+        <a href="/catalog" class="btn btn-secondary">Back to Catalog</a>
+    </div>
+</div>
+{% endblock %}

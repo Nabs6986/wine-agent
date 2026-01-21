@@ -1,6 +1,8 @@
 """Tests for web routes."""
 
+import sys
 import tempfile
+from contextlib import contextmanager
 from pathlib import Path
 from uuid import uuid4
 
@@ -44,14 +46,10 @@ def test_session(test_engine):
 @pytest.fixture
 def client(test_engine, monkeypatch):
     """Create a test client with mocked database."""
-    from sqlalchemy.orm import sessionmaker
-
     # Create session factory for the test engine
     TestSessionLocal = sessionmaker(bind=test_engine)
 
     # Mock the get_session context manager
-    from contextlib import contextmanager
-
     @contextmanager
     def mock_get_session():
         session = TestSessionLocal()
@@ -60,17 +58,23 @@ def client(test_engine, monkeypatch):
         finally:
             session.close()
 
-    # Apply the monkeypatch
+    # Remove wine_agent.web.app from sys.modules to force reimport with mocks
+    modules_to_remove = [key for key in sys.modules if key.startswith("wine_agent.web")]
+    for mod in modules_to_remove:
+        del sys.modules[mod]
+
+    # Mock run_migrations before importing the app module
+    import wine_agent.db.engine
+    monkeypatch.setattr(wine_agent.db.engine, "run_migrations", lambda: None)
+
+    # Now import and create app - it will use the mocked run_migrations
+    from wine_agent.web.app import create_app
+    app = create_app()
+
+    # Apply the session monkeypatch to the routes
     monkeypatch.setattr("wine_agent.web.routes.inbox.get_session", mock_get_session)
     monkeypatch.setattr("wine_agent.web.routes.notes.get_session", mock_get_session)
 
-    # Also mock the init_db in app creation to prevent it from creating another DB
-    monkeypatch.setattr("wine_agent.web.app.init_db", lambda: None)
-
-    # Import and create app after mocking
-    from wine_agent.web.app import create_app
-
-    app = create_app()
     return TestClient(app)
 
 

@@ -88,6 +88,10 @@ class TastingNoteDB(Base):
     # Full structured payload as JSON
     note_json: Mapped[str] = mapped_column(Text, nullable=False)
 
+    # Optional links to canonical entities (added in Phase 1 for catalog integration)
+    vintage_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+    wine_id: Mapped[str | None] = mapped_column(String(36), nullable=True, index=True)
+
     def __repr__(self) -> str:
         return f"<TastingNoteDB(id={self.id}, producer='{self.producer}', vintage={self.vintage})>"
 

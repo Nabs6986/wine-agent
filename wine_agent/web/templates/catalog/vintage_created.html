@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+
+{% block title %}Vintage Created - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="success-page">
+    <h1>Vintage Created</h1>
+
+    <div class="success-message">
+        <p><strong>{{ vintage.year }} {{ wine.canonical_name if wine else 'Unknown Wine' }}</strong>
+        {% if producer %}by {{ producer.canonical_name }}{% endif %}
+        has been added to the catalog.</p>
+    </div>
+
+    <div class="entity-details">
+        <dl>
+            <dt>ID</dt>
+            <dd><code>{{ vintage.id }}</code></dd>
+
+            <dt>Year</dt>
+            <dd>{{ vintage.year }}</dd>
+
+            <dt>Bottle Size</dt>
+            <dd>{{ vintage.bottle_size_ml }}ml</dd>
+
+            {% if vintage.abv %}
+            <dt>ABV</dt>
+            <dd>{{ vintage.abv }}%</dd>
+            {% endif %}
+        </dl>
+    </div>
+
+    <div class="next-actions">
+        <h3>What's next?</h3>
+        <a href="/notes/new?vintage_id={{ vintage.id }}" class="btn btn-primary">Add a Tasting Note</a>
+        <a href="/catalog/vintages/new?wine_id={{ vintage.wine_id }}" class="btn btn-secondary">Add Another Vintage</a>
+        <a href="/catalog" class="btn btn-secondary">Back to Catalog</a>
+    </div>
+</div>
+{% endblock %}
