@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+
+{% block title %}Flight Comparison - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="flight-compare-page">
+    <div class="page-header">
+        <h1>Flight Comparison</h1>
+        <a href="/flight" class="btn">Back to Selection</a>
+    </div>
+
+    <div class="comparison-grid notes-{{ note_count }}">
+        {% for note in notes %}
+        <div class="comparison-card">
+            <!-- Header -->
+            <div class="comparison-header">
+                <div class="comparison-score">{{ note.scores.total }}</div>
+                <div class="comparison-quality">{{ note.scores.quality_band.value if note.scores.quality_band else '' }}</div>
+            </div>
+
+            <!-- Wine Identity -->
+            <section class="comparison-section">
+                <h3>Wine Identity</h3>
+                <div class="comparison-identity">
+                    <p class="vintage">{{ note.wine.vintage or 'NV' }}</p>
+                    <p class="producer">{{ note.wine.producer }}</p>
+                    <p class="cuvee">{{ note.wine.cuvee }}</p>
+                    <p class="region">{{ note.wine.region }}, {{ note.wine.country }}</p>
+                    {% if note.wine.grapes %}
+                    <p class="grapes">{{ note.wine.grapes | join(', ') }}</p>
+                    {% endif %}
+                    {% if note.wine.color %}
+                    <p class="color">{{ note.wine.color.value }}</p>
+                    {% endif %}
+                </div>
+            </section>
+
+            <!-- Scores Breakdown -->
+            <section class="comparison-section">
+                <h3>Scores</h3>
+                {% if note.scores.subscores %}
+                <div class="subscores-grid">
+                    <div class="subscore">
+                        <span class="subscore-label">Appearance</span>
+                        <span class="subscore-value">{{ note.scores.subscores.appearance }}/3</span>
+                    </div>
+                    <div class="subscore">
+                        <span class="subscore-label">Nose</span>
+                        <span class="subscore-value">{{ note.scores.subscores.nose }}/17</span>
+                    </div>
+                    <div class="subscore">
+                        <span class="subscore-label">Palate</span>
+                        <span class="subscore-value">{{ note.scores.subscores.palate }}/20</span>
+                    </div>
+                    <div class="subscore">
+                        <span class="subscore-label">Structure</span>
+                        <span class="subscore-value">{{ note.scores.subscores.structure_balance }}/20</span>
+                    </div>
+                    <div class="subscore">
+                        <span class="subscore-label">Finish</span>
+                        <span class="subscore-value">{{ note.scores.subscores.finish }}/10</span>
+                    </div>
+                    <div class="subscore">
+                        <span class="subscore-label">Typicity</span>
+                        <span class="subscore-value">{{ note.scores.subscores.typicity_complexity }}/15</span>
+                    </div>
+                    <div class="subscore">
+                        <span class="subscore-label">Judgment</span>
+                        <span class="subscore-value">{{ note.scores.subscores.overall_judgment }}/15</span>
+                    </div>
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- Structure -->
+            {% if note.structure %}
+            <section class="comparison-section">
+                <h3>Structure</h3>
+                <div class="structure-grid">
+                    {% if note.structure.acidity %}
+                    <div class="structure-item">
+                        <span class="structure-label">Acidity</span>
+                        <span class="structure-value">{{ note.structure.acidity.value }}</span>
+                    </div>
+                    {% endif %}
+                    {% if note.structure.tannin %}
+                    <div class="structure-item">
+                        <span class="structure-label">Tannin</span>
+                        <span class="structure-value">{{ note.structure.tannin.value }}</span>
+                    </div>
+                    {% endif %}
+                    {% if note.structure.body %}
+                    <div class="structure-item">
+                        <span class="structure-label">Body</span>
+                        <span class="structure-value">{{ note.structure.body.value }}</span>
+                    </div>
+                    {% endif %}
+                    {% if note.structure.alcohol_feel %}
+                    <div class="structure-item">
+                        <span class="structure-label">Alcohol</span>
+                        <span class="structure-value">{{ note.structure.alcohol_feel.value }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Sensory Notes -->
+            <section class="comparison-section">
+                <h3>Sensory Notes</h3>
+                {% if note.nose_notes %}
+                <div class="sensory-item">
+                    <strong>Nose:</strong>
+                    <p>{{ note.nose_notes }}</p>
+                </div>
+                {% endif %}
+                {% if note.palate_notes %}
+                <div class="sensory-item">
+                    <strong>Palate:</strong>
+                    <p>{{ note.palate_notes }}</p>
+                </div>
+                {% endif %}
+            </section>
+
+            <!-- Conclusion -->
+            {% if note.conclusion %}
+            <section class="comparison-section">
+                <h3>Conclusion</h3>
+                <p>{{ note.conclusion }}</p>
+            </section>
+            {% endif %}
+
+            <!-- Readiness -->
+            {% if note.readiness %}
+            <section class="comparison-section">
+                <h3>Readiness</h3>
+                <div class="readiness-info">
+                    {% if note.readiness.drink_or_hold %}
+                    <p><strong>Status:</strong> {{ note.readiness.drink_or_hold.value }}</p>
+                    {% endif %}
+                    {% if note.readiness.drinking_window_start and note.readiness.drinking_window_end %}
+                    <p><strong>Window:</strong> {{ note.readiness.drinking_window_start }} - {{ note.readiness.drinking_window_end }}</p>
+                    {% endif %}
+                </div>
+            </section>
+            {% endif %}
+
+            <!-- Link to Full Note -->
+            <div class="comparison-footer">
+                <a href="/notes/{{ note.id }}" class="btn btn-small">View Full Note</a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

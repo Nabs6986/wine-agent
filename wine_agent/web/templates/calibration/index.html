@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Calibration - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="calibration-page">
+    <div class="page-header">
+        <h1>Scoring Calibration</h1>
+        <p class="subtitle">Define what each score level means to you</p>
+    </div>
+
+    <!-- Personal Stats Summary -->
+    <section class="calibration-section stats-section">
+        <h2>Your Scoring Profile</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">{{ personal_stats.total_notes }}</span>
+                <span class="stat-label">Total Notes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ personal_stats.avg_score }}</span>
+                <span class="stat-label">Average Score</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ personal_stats.std_dev }}</span>
+                <span class="stat-label">Std Deviation</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ personal_stats.score_range[0] }}-{{ personal_stats.score_range[1] }}</span>
+                <span class="stat-label">Score Range</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ personal_stats.notes_this_month }}</span>
+                <span class="stat-label">This Month</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ personal_stats.avg_score_this_month }}</span>
+                <span class="stat-label">Avg This Month</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Score Consistency -->
+    {% if consistency.by_region or consistency.by_country %}
+    <section class="calibration-section">
+        <h2>Scoring Consistency</h2>
+        <p class="section-note">Lower standard deviation indicates more consistent scoring</p>
+        <div class="consistency-grid">
+            <div class="consistency-card">
+                <span class="consistency-label">Overall</span>
+                <span class="consistency-value">{{ consistency.overall_std_dev }}</span>
+            </div>
+            {% for region, std_dev in consistency.by_region.items() %}
+            <div class="consistency-card">
+                <span class="consistency-label">{{ region }}</span>
+                <span class="consistency-value">{{ std_dev }}</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Scoring Trends -->
+    {% if scoring_trends %}
+    <section class="calibration-section">
+        <h2>Scoring Trends</h2>
+        <div class="trends-chart">
+            <table class="calibration-table">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Notes</th>
+                        <th>Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for trend in scoring_trends[-12:] %}
+                    <tr>
+                        <td>{{ trend.period }}</td>
+                        <td>{{ trend.count }}</td>
+                        <td class="score-cell">{{ trend.avg_score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Score Reference Grid -->
+    <section class="calibration-section">
+        <h2>Score Reference Guide</h2>
+        <p class="section-note">Define what each score level means for your personal calibration</p>
+
+        <div class="score-reference-grid">
+            {% for score_level in default_score_levels %}
+            <div class="score-card" id="score-card-{{ score_level }}">
+                <div class="score-header">
+                    <span class="score-badge">{{ score_level }}+</span>
+                </div>
+
+                {% if score_level in notes_by_score %}
+                {% set note = notes_by_score[score_level] %}
+                <div class="score-content">
+                    <p class="score-description">{{ note.description }}</p>
+                    {% if note.examples %}
+                    <div class="score-examples">
+                        <strong>Examples:</strong>
+                        <ul>
+                            {% for example in note.examples %}
+                            <li>{{ example }}</li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                    {% endif %}
+                    <div class="score-actions">
+                        <button
+                            class="btn btn-small"
+                            hx-get="/calibration/edit/{{ note.id }}"
+                            hx-target="#score-card-{{ score_level }} .score-content"
+                            hx-swap="outerHTML"
+                        >
+                            Edit
+                        </button>
+                        <form action="/calibration/{{ note.id }}/delete" method="post" class="inline-form">
+                            <button type="submit" class="btn btn-small btn-danger" onclick="return confirm('Delete this calibration note?')">
+                                Delete
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                {% else %}
+                <div class="score-content empty">
+                    <p class="empty-message">No calibration note defined</p>
+                    <button
+                        class="btn btn-small btn-primary"
+                        hx-get="/calibration/add/{{ score_level }}"
+                        hx-target="#score-card-{{ score_level }} .score-content"
+                        hx-swap="outerHTML"
+                    >
+                        Add Note
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+
+    <!-- Add New Score Level -->
+    <section class="calibration-section">
+        <h2>Add Custom Score Level</h2>
+        <form action="/calibration" method="post" class="calibration-form">
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="score_value">Score Value</label>
+                    <input type="number" id="score_value" name="score_value" min="0" max="100" required>
+                </div>
+            </div>
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3" required
+                    placeholder="What does this score mean to you?"></textarea>
+            </div>
+            <div class="form-group">
+                <label for="examples">Example Wines (comma-separated)</label>
+                <input type="text" id="examples" name="examples"
+                    placeholder="e.g., 2015 Domaine Leroy Musigny, 2010 Lafite">
+            </div>
+            <button type="submit" class="btn btn-primary">Add Calibration Note</button>
+        </form>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,176 @@
+{% extends "base.html" %}
+
+{% block title %}Draft Note - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/inbox">Inbox</a> / Draft Note
+    </div>
+    <h1>Draft Tasting Note</h1>
+</div>
+
+<div class="draft-note">
+    <div class="note-status-bar">
+        <span class="status draft">Draft</span>
+        <span class="date">Created: {{ note.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+    </div>
+
+    {% if inbox_item %}
+    <div class="source-info">
+        <h2>Source</h2>
+        <p>Converted from <a href="/inbox/{{ inbox_item.id }}">inbox item</a></p>
+        <div class="raw-text-preview">
+            {{ inbox_item.raw_text[:300] }}{% if inbox_item.raw_text|length > 300 %}...{% endif %}
+        </div>
+    </div>
+    {% endif %}
+
+    {% if note.wine.producer or note.wine.vintage or note.wine.region %}
+    <div class="wine-identity">
+        <h2>Wine Identity</h2>
+        <dl class="wine-details">
+            {% if note.wine.producer %}<dt>Producer</dt><dd>{{ note.wine.producer }}</dd>{% endif %}
+            {% if note.wine.cuvee %}<dt>Cuvée</dt><dd>{{ note.wine.cuvee }}</dd>{% endif %}
+            {% if note.wine.vintage %}<dt>Vintage</dt><dd>{{ note.wine.vintage }}</dd>{% endif %}
+            {% if note.wine.region %}<dt>Region</dt><dd>{{ note.wine.region }}</dd>{% endif %}
+            {% if note.wine.country %}<dt>Country</dt><dd>{{ note.wine.country }}</dd>{% endif %}
+            {% if note.wine.appellation %}<dt>Appellation</dt><dd>{{ note.wine.appellation }}</dd>{% endif %}
+            {% if note.wine.grapes %}<dt>Grapes</dt><dd>{{ note.wine.grapes | join(', ') }}</dd>{% endif %}
+            {% if note.wine.color %}<dt>Color</dt><dd>{{ note.wine.color.value }}</dd>{% endif %}
+            {% if note.wine.sweetness %}<dt>Sweetness</dt><dd>{{ note.wine.sweetness.value }}</dd>{% endif %}
+            {% if note.wine.alcohol_percent %}<dt>ABV</dt><dd>{{ note.wine.alcohol_percent }}%</dd>{% endif %}
+        </dl>
+    </div>
+    {% endif %}
+
+    {% if note.context.tasting_date or note.context.location or note.context.occasion or note.context.food_pairing %}
+    <div class="tasting-context">
+        <h2>Tasting Context</h2>
+        <dl class="wine-details">
+            {% if note.context.tasting_date %}<dt>Date</dt><dd>{{ note.context.tasting_date.strftime('%Y-%m-%d') }}</dd>{% endif %}
+            {% if note.context.location %}<dt>Location</dt><dd>{{ note.context.location }}</dd>{% endif %}
+            {% if note.context.occasion %}<dt>Occasion</dt><dd>{{ note.context.occasion }}</dd>{% endif %}
+            {% if note.context.food_pairing %}<dt>Food Pairing</dt><dd>{{ note.context.food_pairing }}</dd>{% endif %}
+            {% if note.context.companions %}<dt>Companions</dt><dd>{{ note.context.companions }}</dd>{% endif %}
+            {% if note.context.glassware %}<dt>Glassware</dt><dd>{{ note.context.glassware }}</dd>{% endif %}
+            {% if note.context.decant %}<dt>Decant</dt><dd>{{ note.context.decant.value }}{% if note.context.decant_minutes %} ({{ note.context.decant_minutes }} min){% endif %}</dd>{% endif %}
+        </dl>
+    </div>
+    {% endif %}
+
+    {% if note.appearance_notes or note.nose_notes or note.palate_notes %}
+    <div class="sensory-notes">
+        <h2>Sensory Notes</h2>
+        {% if note.appearance_notes %}<div class="sensory-section"><h3>Appearance</h3><p>{{ note.appearance_notes }}</p></div>{% endif %}
+        {% if note.nose_notes %}<div class="sensory-section"><h3>Nose</h3><p>{{ note.nose_notes }}</p></div>{% endif %}
+        {% if note.palate_notes %}<div class="sensory-section"><h3>Palate</h3><p>{{ note.palate_notes }}</p></div>{% endif %}
+        {% if note.finish_notes %}<div class="sensory-section"><h3>Finish</h3><p>{{ note.finish_notes }}</p></div>{% endif %}
+    </div>
+    {% endif %}
+
+    {% if note.structure_levels.acidity or note.structure_levels.tannin or note.structure_levels.body %}
+    <div class="wine-structure">
+        <h2>Structure</h2>
+        <dl class="wine-details">
+            {% if note.structure_levels.acidity %}<dt>Acidity</dt><dd>{{ note.structure_levels.acidity.value }}</dd>{% endif %}
+            {% if note.structure_levels.tannin %}<dt>Tannin</dt><dd>{{ note.structure_levels.tannin.value }}</dd>{% endif %}
+            {% if note.structure_levels.body %}<dt>Body</dt><dd>{{ note.structure_levels.body.value }}</dd>{% endif %}
+            {% if note.structure_levels.sweetness %}<dt>Sweetness</dt><dd>{{ note.structure_levels.sweetness.value }}</dd>{% endif %}
+            {% if note.structure_levels.alcohol %}<dt>Alcohol</dt><dd>{{ note.structure_levels.alcohol.value }}</dd>{% endif %}
+            {% if note.structure_levels.intensity %}<dt>Intensity</dt><dd>{{ note.structure_levels.intensity.value }}</dd>{% endif %}
+            {% if note.structure_levels.oak %}<dt>Oak</dt><dd>{{ note.structure_levels.oak.value }}</dd>{% endif %}
+        </dl>
+        {% if note.structure_notes %}
+        <p class="structure-notes">{{ note.structure_notes }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if note.scores.total > 0 %}
+    <div class="wine-scores">
+        <h2>Scores</h2>
+        <div class="total-score">
+            <span class="score-value">{{ note.scores.total }}</span>
+            <span class="score-label">/ 100</span>
+        </div>
+        {% if note.scores.quality_band %}
+        <p class="quality-band">{{ note.scores.quality_band.value }}</p>
+        {% endif %}
+        <dl class="score-breakdown">
+            <dt>Appearance</dt><dd>{{ note.scores.subscores.appearance }} / 2</dd>
+            <dt>Nose</dt><dd>{{ note.scores.subscores.nose }} / 12</dd>
+            <dt>Palate</dt><dd>{{ note.scores.subscores.palate }} / 20</dd>
+            <dt>Structure/Balance</dt><dd>{{ note.scores.subscores.structure_balance }} / 20</dd>
+            <dt>Finish</dt><dd>{{ note.scores.subscores.finish }} / 10</dd>
+            <dt>Typicity/Complexity</dt><dd>{{ note.scores.subscores.typicity_complexity }} / 16</dd>
+            <dt>Overall Judgment</dt><dd>{{ note.scores.subscores.overall_judgment }} / 20</dd>
+        </dl>
+        {% if note.scores.personal_enjoyment %}
+        <p class="enjoyment">Personal Enjoyment: {{ note.scores.personal_enjoyment }} / 10</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if note.readiness.window_start_year or note.readiness.window_end_year or note.readiness.notes %}
+    <div class="wine-readiness">
+        <h2>Readiness</h2>
+        <dl class="wine-details">
+            <dt>Recommendation</dt><dd>{{ note.readiness.drink_or_hold.value }}</dd>
+            {% if note.readiness.window_start_year %}<dt>Drink From</dt><dd>{{ note.readiness.window_start_year }}</dd>{% endif %}
+            {% if note.readiness.window_end_year %}<dt>Drink Until</dt><dd>{{ note.readiness.window_end_year }}</dd>{% endif %}
+        </dl>
+        {% if note.readiness.notes %}
+        <p>{{ note.readiness.notes }}</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    {% if note.overall_notes %}
+    <div class="overall-notes">
+        <h2>Overall Notes</h2>
+        <p>{{ note.overall_notes }}</p>
+    </div>
+    {% endif %}
+
+    {% if note.conclusion %}
+    <div class="conclusion">
+        <h2>Conclusion</h2>
+        <p>{{ note.conclusion }}</p>
+    </div>
+    {% endif %}
+
+    {% set has_wine_data = note.wine.producer or note.wine.vintage or note.wine.region or note.nose_notes or note.palate_notes %}
+    {% if not has_wine_data %}
+    <div class="placeholder-message">
+        <h2>Placeholder Draft</h2>
+        <p>This draft note does not contain extracted wine data. This may happen if AI conversion was not available or failed.</p>
+    </div>
+    {% endif %}
+
+    <details class="raw-data">
+        <summary>Raw JSON Data</summary>
+        <pre class="json-preview">{{ note.model_dump_json(indent=2) }}</pre>
+    </details>
+
+    {% if publish_error %}
+    <div class="alert alert-error">
+        <strong>Publish Failed:</strong> {{ publish_error }}
+    </div>
+    {% endif %}
+
+    <div class="note-actions">
+        <a href="/notes/draft/{{ note.id }}/edit" class="btn btn-primary">Edit Draft</a>
+        <form method="POST" action="/notes/draft/{{ note.id }}/publish" style="display: inline;">
+            <button type="submit" class="btn btn-primary">Publish</button>
+        </form>
+        <form method="POST" action="/notes/{{ note.id }}/delete" style="display: inline;" onsubmit="return confirm('Are you sure you want to delete this draft?');">
+            <button type="submit" class="btn btn-secondary">Delete</button>
+        </form>
+        {% if inbox_item %}
+        <a href="/inbox/{{ inbox_item.id }}" class="btn btn-secondary">View Source</a>
+        {% endif %}
+        <a href="/notes" class="btn btn-secondary">Back to Notes</a>
+    </div>
+</div>
+{% endblock %}

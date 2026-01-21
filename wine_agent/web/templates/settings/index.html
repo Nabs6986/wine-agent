@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="settings-page">
+    <div class="page-header">
+        <h1>Settings</h1>
+        <p class="subtitle">Wine Agent configuration and status</p>
+    </div>
+
+    <!-- Application Info -->
+    <section class="settings-section">
+        <h2>Application</h2>
+        <div class="settings-card">
+            <div class="settings-row">
+                <span class="settings-label">Version</span>
+                <span class="settings-value">{{ version }}</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">Documentation</span>
+                <span class="settings-value">
+                    <a href="https://github.com/yourusername/wine-agent" target="_blank">GitHub Repository</a>
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Configuration -->
+    <section class="settings-section">
+        <h2>AI Conversion</h2>
+        <div class="settings-card">
+            <div class="settings-row">
+                <span class="settings-label">Status</span>
+                <span class="settings-value">
+                    {% if ai_status.configured %}
+                    <span class="status-badge status-success">Configured</span>
+                    {% else %}
+                    <span class="status-badge status-warning">Not Configured</span>
+                    {% endif %}
+                </span>
+            </div>
+            {% if ai_status.configured %}
+            <div class="settings-row">
+                <span class="settings-label">Provider</span>
+                <span class="settings-value">{{ ai_status.provider }}</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">API Key</span>
+                <span class="settings-value code">{{ ai_status.key_preview }}</span>
+            </div>
+            {% else %}
+            <div class="settings-info">
+                <p>AI conversion is not configured. To enable AI-assisted note conversion:</p>
+                <ol>
+                    <li>Create a <code>.env</code> file in the project root</li>
+                    <li>Add your API key: <code>ANTHROPIC_API_KEY=your-key-here</code></li>
+                    <li>Restart the web server</li>
+                </ol>
+                <p>Without AI configuration, converting inbox items will create placeholder drafts that you can fill in manually.</p>
+            </div>
+            {% endif %}
+            <div class="settings-row">
+                <span class="settings-label">AI_PROVIDER</span>
+                <span class="settings-value code">{{ env_config.AI_PROVIDER }}</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">AI_MODEL</span>
+                <span class="settings-value code">{{ env_config.AI_MODEL }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Database Information -->
+    <section class="settings-section">
+        <h2>Database</h2>
+        <div class="settings-card">
+            <div class="settings-row">
+                <span class="settings-label">Location</span>
+                <span class="settings-value code">{{ db_path }}</span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">Status</span>
+                <span class="settings-value">
+                    {% if db_exists %}
+                    <span class="status-badge status-success">Active</span>
+                    {% else %}
+                    <span class="status-badge status-error">Not Found</span>
+                    {% endif %}
+                </span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">Size</span>
+                <span class="settings-value">{{ db_size }}</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Database Statistics -->
+    <section class="settings-section">
+        <h2>Data Statistics</h2>
+        <div class="stats-grid settings-stats">
+            <div class="stat-card">
+                <span class="stat-value">{{ db_stats.inbox_items }}</span>
+                <span class="stat-label">Inbox Items</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ db_stats.draft_notes }}</span>
+                <span class="stat-label">Draft Notes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ db_stats.published_notes }}</span>
+                <span class="stat-label">Published Notes</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- CLI Commands -->
+    <section class="settings-section">
+        <h2>CLI Commands</h2>
+        <div class="settings-card">
+            <div class="settings-info">
+                <p>Wine Agent includes a command-line interface for backup, restore, and other operations:</p>
+                <div class="cli-commands">
+                    <div class="cli-command">
+                        <code>wine-agent run</code>
+                        <span>Start the web server</span>
+                    </div>
+                    <div class="cli-command">
+                        <code>wine-agent backup</code>
+                        <span>Create a timestamped database backup</span>
+                    </div>
+                    <div class="cli-command">
+                        <code>wine-agent backup --include-exports</code>
+                        <span>Backup with JSON/CSV exports</span>
+                    </div>
+                    <div class="cli-command">
+                        <code>wine-agent restore &lt;backup-file&gt;</code>
+                        <span>Restore database from backup</span>
+                    </div>
+                    <div class="cli-command">
+                        <code>wine-agent check-config</code>
+                        <span>Display configuration status</span>
+                    </div>
+                    <div class="cli-command">
+                        <code>wine-agent version</code>
+                        <span>Show version number</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Export Links -->
+    <section class="settings-section">
+        <h2>Data Export</h2>
+        <div class="settings-card">
+            <div class="export-links">
+                <a href="/export/json" class="btn btn-secondary">Export All as JSON</a>
+                <a href="/export/csv" class="btn btn-secondary">Export All as CSV</a>
+            </div>
+            <p class="settings-note">Exports include all published notes. Individual notes can be exported as Markdown from their detail pages.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}

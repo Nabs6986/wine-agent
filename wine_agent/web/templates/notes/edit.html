@@ -1,0 +1,345 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Draft - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/notes">Notes</a> / <a href="/notes/draft/{{ note.id }}">Draft</a> / Edit
+    </div>
+    <h1>Edit Draft</h1>
+</div>
+
+{% if errors.general %}
+<div class="alert alert-error">
+    <strong>Error:</strong> {{ errors.general }}
+</div>
+{% endif %}
+
+<form method="POST" action="/notes/draft/{{ note.id }}" class="edit-form">
+    <!-- Wine Identity Section -->
+    <fieldset class="form-section">
+        <legend>Wine Identity</legend>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="producer">Producer</label>
+                <input type="text" id="producer" name="producer" value="{{ note.wine.producer }}" placeholder="e.g., Domaine de la Romanée-Conti">
+            </div>
+            <div class="form-group">
+                <label for="cuvee">Cuvée / Wine Name</label>
+                <input type="text" id="cuvee" name="cuvee" value="{{ note.wine.cuvee }}" placeholder="e.g., La Tâche">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group form-group-small">
+                <label for="vintage">Vintage</label>
+                <input type="number" id="vintage" name="vintage" value="{{ note.wine.vintage or '' }}" min="1900" max="2100" placeholder="e.g., 2019">
+            </div>
+            <div class="form-group">
+                <label for="country">Country</label>
+                <input type="text" id="country" name="country" value="{{ note.wine.country }}" placeholder="e.g., France">
+            </div>
+            <div class="form-group">
+                <label for="region">Region</label>
+                <input type="text" id="region" name="region" value="{{ note.wine.region }}" placeholder="e.g., Burgundy">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="appellation">Appellation</label>
+                <input type="text" id="appellation" name="appellation" value="{{ note.wine.appellation }}" placeholder="e.g., Vosne-Romanée">
+            </div>
+            <div class="form-group">
+                <label for="grapes">Grapes (comma-separated)</label>
+                <input type="text" id="grapes" name="grapes" value="{{ note.wine.grapes | join(', ') }}" placeholder="e.g., Pinot Noir, Chardonnay">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="color">Color</label>
+                <select id="color" name="color">
+                    <option value="">Select...</option>
+                    {% for value, label in wine_colors %}
+                    <option value="{{ value }}" {% if note.wine.color and note.wine.color.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="style">Style</label>
+                <select id="style" name="style">
+                    <option value="">Select...</option>
+                    {% for value, label in wine_styles %}
+                    <option value="{{ value }}" {% if note.wine.style and note.wine.style.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sweetness">Sweetness</label>
+                <select id="sweetness" name="sweetness">
+                    <option value="">Select...</option>
+                    {% for value, label in sweetness_types %}
+                    <option value="{{ value }}" {% if note.wine.sweetness and note.wine.sweetness.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group form-group-small">
+                <label for="alcohol_percent">ABV %</label>
+                <input type="number" id="alcohol_percent" name="alcohol_percent" value="{{ note.wine.alcohol_percent or '' }}" min="0" max="25" step="0.1" placeholder="e.g., 13.5">
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Tasting Context Section -->
+    <fieldset class="form-section">
+        <legend>Tasting Context</legend>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="tasting_date">Tasting Date</label>
+                <input type="date" id="tasting_date" name="tasting_date" value="{{ note.context.tasting_date.isoformat() if note.context.tasting_date else '' }}">
+            </div>
+            <div class="form-group">
+                <label for="location">Location</label>
+                <input type="text" id="location" name="location" value="{{ note.context.location }}" placeholder="e.g., Home, Restaurant Name">
+            </div>
+            <div class="form-group">
+                <label for="occasion">Occasion</label>
+                <input type="text" id="occasion" name="occasion" value="{{ note.context.occasion }}" placeholder="e.g., Dinner party, Tasting event">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="food_pairing">Food Pairing</label>
+                <input type="text" id="food_pairing" name="food_pairing" value="{{ note.context.food_pairing }}" placeholder="e.g., Roast lamb, Grilled salmon">
+            </div>
+            <div class="form-group">
+                <label for="companions">Companions</label>
+                <input type="text" id="companions" name="companions" value="{{ note.context.companions }}" placeholder="e.g., Friends, Solo">
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="glassware">Glassware</label>
+                <input type="text" id="glassware" name="glassware" value="{{ note.context.glassware }}" placeholder="e.g., Burgundy glass">
+            </div>
+            <div class="form-group">
+                <label for="decant">Decant</label>
+                <select id="decant" name="decant">
+                    <option value="">Select...</option>
+                    {% for value, label in decant_levels %}
+                    <option value="{{ value }}" {% if note.context.decant and note.context.decant.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group form-group-small">
+                <label for="decant_minutes">Decant (min)</label>
+                <input type="number" id="decant_minutes" name="decant_minutes" value="{{ note.context.decant_minutes or '' }}" min="0" placeholder="e.g., 30">
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Sensory Notes Section -->
+    <fieldset class="form-section">
+        <legend>Sensory Notes</legend>
+
+        <div class="form-group">
+            <label for="appearance_notes">Appearance</label>
+            <textarea id="appearance_notes" name="appearance_notes" rows="2" placeholder="Color, clarity, intensity...">{{ note.appearance_notes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="nose_notes">Nose</label>
+            <textarea id="nose_notes" name="nose_notes" rows="3" placeholder="Aromas, intensity, complexity...">{{ note.nose_notes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="palate_notes">Palate</label>
+            <textarea id="palate_notes" name="palate_notes" rows="3" placeholder="Flavors, texture, mouthfeel...">{{ note.palate_notes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="finish_notes">Finish</label>
+            <textarea id="finish_notes" name="finish_notes" rows="2" placeholder="Length, aftertaste...">{{ note.finish_notes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="structure_notes">Structure Notes</label>
+            <textarea id="structure_notes" name="structure_notes" rows="2" placeholder="Balance, integration...">{{ note.structure_notes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="overall_notes">Overall Notes</label>
+            <textarea id="overall_notes" name="overall_notes" rows="3" placeholder="General impressions...">{{ note.overall_notes }}</textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="conclusion">Conclusion</label>
+            <textarea id="conclusion" name="conclusion" rows="2" placeholder="Final summary, recommendation...">{{ note.conclusion }}</textarea>
+        </div>
+    </fieldset>
+
+    <!-- Structure Levels Section -->
+    <fieldset class="form-section">
+        <legend>Structure Levels</legend>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="acidity">Acidity</label>
+                <select id="acidity" name="acidity">
+                    <option value="">Select...</option>
+                    {% for value, label in structure_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.acidity and note.structure_levels.acidity.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="tannin">Tannin</label>
+                <select id="tannin" name="tannin">
+                    <option value="">Select...</option>
+                    {% for value, label in structure_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.tannin and note.structure_levels.tannin.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="body">Body</label>
+                <select id="body" name="body">
+                    <option value="">Select...</option>
+                    {% for value, label in body_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.body and note.structure_levels.body.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="alcohol_level">Alcohol</label>
+                <select id="alcohol_level" name="alcohol_level">
+                    <option value="">Select...</option>
+                    {% for value, label in alcohol_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.alcohol and note.structure_levels.alcohol.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="sweetness_level">Sweetness</label>
+                <select id="sweetness_level" name="sweetness_level">
+                    <option value="">Select...</option>
+                    {% for value, label in sweetness_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.sweetness and note.structure_levels.sweetness.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="intensity">Intensity</label>
+                <select id="intensity" name="intensity">
+                    <option value="">Select...</option>
+                    {% for value, label in intensity_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.intensity and note.structure_levels.intensity.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="oak">Oak</label>
+                <select id="oak" name="oak">
+                    <option value="">Select...</option>
+                    {% for value, label in oak_levels %}
+                    <option value="{{ value }}" {% if note.structure_levels.oak and note.structure_levels.oak.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </fieldset>
+
+    <!-- Scores Section -->
+    <fieldset class="form-section">
+        <legend>Scores (100-point system)</legend>
+
+        <div class="score-inputs">
+            <div class="score-row">
+                <label for="score_appearance">Appearance (0-2)</label>
+                <input type="number" id="score_appearance" name="score_appearance" value="{{ note.scores.subscores.appearance }}" min="0" max="2">
+            </div>
+            <div class="score-row">
+                <label for="score_nose">Nose (0-12)</label>
+                <input type="number" id="score_nose" name="score_nose" value="{{ note.scores.subscores.nose }}" min="0" max="12">
+            </div>
+            <div class="score-row">
+                <label for="score_palate">Palate (0-20)</label>
+                <input type="number" id="score_palate" name="score_palate" value="{{ note.scores.subscores.palate }}" min="0" max="20">
+            </div>
+            <div class="score-row">
+                <label for="score_structure_balance">Structure & Balance (0-20)</label>
+                <input type="number" id="score_structure_balance" name="score_structure_balance" value="{{ note.scores.subscores.structure_balance }}" min="0" max="20">
+            </div>
+            <div class="score-row">
+                <label for="score_finish">Finish (0-10)</label>
+                <input type="number" id="score_finish" name="score_finish" value="{{ note.scores.subscores.finish }}" min="0" max="10">
+            </div>
+            <div class="score-row">
+                <label for="score_typicity_complexity">Typicity & Complexity (0-16)</label>
+                <input type="number" id="score_typicity_complexity" name="score_typicity_complexity" value="{{ note.scores.subscores.typicity_complexity }}" min="0" max="16">
+            </div>
+            <div class="score-row">
+                <label for="score_overall_judgment">Overall Judgment (0-20)</label>
+                <input type="number" id="score_overall_judgment" name="score_overall_judgment" value="{{ note.scores.subscores.overall_judgment }}" min="0" max="20">
+            </div>
+        </div>
+
+        <div class="score-total">
+            <span class="label">Current Total:</span>
+            <span class="value">{{ note.scores.total }} / 100</span>
+            {% if note.scores.quality_band %}
+            <span class="quality-band">{{ note.scores.quality_band.value }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label for="personal_enjoyment">Personal Enjoyment (0-10)</label>
+            <input type="number" id="personal_enjoyment" name="personal_enjoyment" value="{{ note.scores.personal_enjoyment or '' }}" min="0" max="10">
+            <small>Your subjective enjoyment, separate from technical quality</small>
+        </div>
+    </fieldset>
+
+    <!-- Readiness Section -->
+    <fieldset class="form-section">
+        <legend>Readiness</legend>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="drink_or_hold">Recommendation</label>
+                <select id="drink_or_hold" name="drink_or_hold">
+                    {% for value, label in drink_or_hold %}
+                    <option value="{{ value }}" {% if note.readiness.drink_or_hold.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group form-group-small">
+                <label for="window_start_year">Drink From</label>
+                <input type="number" id="window_start_year" name="window_start_year" value="{{ note.readiness.window_start_year or '' }}" min="1900" max="2100" placeholder="e.g., 2025">
+            </div>
+            <div class="form-group form-group-small">
+                <label for="window_end_year">Drink Until</label>
+                <input type="number" id="window_end_year" name="window_end_year" value="{{ note.readiness.window_end_year or '' }}" min="1900" max="2100" placeholder="e.g., 2035">
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label for="readiness_notes">Readiness Notes</label>
+            <textarea id="readiness_notes" name="readiness_notes" rows="2" placeholder="Additional aging notes...">{{ note.readiness.notes }}</textarea>
+        </div>
+    </fieldset>
+
+    <div class="form-actions">
+        <a href="/notes/draft/{{ note.id }}" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-primary">Save Draft</button>
+    </div>
+</form>
+{% endblock %}

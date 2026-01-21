@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#FAF7F2">
+    <meta name="description" content="Wine Agent - Local-first tasting notes with Mediterranean elegance">
+    <title>{% block title %}Wine Agent{% endblock %}</title>
+
+    <!-- Google Fonts: Crimson Pro (serif) + Inter (sans-serif) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <header>
+        <nav>
+            <div class="logo">
+                <a href="/">Wine Agent</a>
+            </div>
+            <ul class="nav-links">
+                <li><a href="/inbox" class="{% if request.url.path.startswith('/inbox') %}active{% endif %}">Inbox</a></li>
+                <li><a href="/notes" class="{% if request.url.path.startswith('/notes') %}active{% endif %}">Notes</a></li>
+                <li><a href="/library" class="{% if request.url.path.startswith('/library') %}active{% endif %}">Library</a></li>
+                <li><a href="/analytics" class="{% if request.url.path.startswith('/analytics') %}active{% endif %}">Analytics</a></li>
+                <li><a href="/calibration" class="{% if request.url.path.startswith('/calibration') %}active{% endif %}">Calibration</a></li>
+                <li><a href="/flight" class="{% if request.url.path.startswith('/flight') %}active{% endif %}">Flight</a></li>
+                <li><a href="/settings" class="{% if request.url.path.startswith('/settings') %}active{% endif %}">Settings</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer>
+        <p>Wine Agent v0.1.0 - Local-first tasting notes</p>
+    </footer>
+</body>
+</html>

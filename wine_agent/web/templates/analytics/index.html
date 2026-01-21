@@ -1,0 +1,260 @@
+{% extends "base.html" %}
+
+{% block title %}Analytics - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="analytics-page">
+    <div class="page-header">
+        <h1>Analytics Dashboard</h1>
+        <p class="subtitle">Insights from your tasting note collection</p>
+    </div>
+
+    <!-- Summary Stats -->
+    <section class="analytics-section summary-section">
+        <h2>Collection Summary</h2>
+        <div class="stats-grid">
+            <div class="stat-card">
+                <span class="stat-value">{{ summary.total_notes }}</span>
+                <span class="stat-label">Total Notes</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ summary.avg_score }}</span>
+                <span class="stat-label">Average Score</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ summary.unique_producers }}</span>
+                <span class="stat-label">Producers</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ summary.unique_regions }}</span>
+                <span class="stat-label">Regions</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ summary.unique_countries }}</span>
+                <span class="stat-label">Countries</span>
+            </div>
+            <div class="stat-card">
+                <span class="stat-value">{{ summary.min_score }}-{{ summary.max_score }}</span>
+                <span class="stat-label">Score Range</span>
+            </div>
+        </div>
+        {% if summary.date_range %}
+        <p class="date-range">Notes from {{ summary.date_range[0] }} to {{ summary.date_range[1] }}</p>
+        {% endif %}
+    </section>
+
+    <!-- Score Distribution -->
+    <section class="analytics-section">
+        <h2>Score Distribution</h2>
+        {% if score_distribution.bins %}
+        <div class="distribution-stats">
+            <span><strong>Mean:</strong> {{ score_distribution.mean }}</span>
+            <span><strong>Median:</strong> {{ score_distribution.median }}</span>
+            <span><strong>Std Dev:</strong> {{ score_distribution.std_dev }}</span>
+        </div>
+        <div class="score-distribution-chart">
+            {% set max_count = score_distribution.bins | map(attribute=2) | max %}
+            {% for bin_min, bin_max, count in score_distribution.bins %}
+            <div class="distribution-bar-container">
+                <span class="bin-label">{{ bin_min }}-{{ bin_max }}</span>
+                <div class="bar-wrapper">
+                    <div class="distribution-bar" style="width: {{ (count / max_count * 100) | int }}%;"></div>
+                    <span class="bar-count">{{ count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="empty-message">No score data available yet.</p>
+        {% endif %}
+    </section>
+
+    <!-- Quality Bands -->
+    {% if quality_bands %}
+    <section class="analytics-section">
+        <h2>Quality Bands</h2>
+        <div class="quality-bands-grid">
+            {% for band, count in quality_bands.items() %}
+            <div class="quality-band-card">
+                <span class="band-name">{{ band }}</span>
+                <span class="band-count">{{ count }} notes</span>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Top Entities Row -->
+    <div class="analytics-row">
+        <!-- Top Regions -->
+        <section class="analytics-section analytics-column">
+            <h2>Top Regions</h2>
+            <p class="section-note">Minimum {{ min_count }} notes</p>
+            {% if top_regions %}
+            <table class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Region</th>
+                        <th>Notes</th>
+                        <th>Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entity in top_regions %}
+                    <tr>
+                        <td>{{ entity.name }}</td>
+                        <td>{{ entity.count }}</td>
+                        <td class="score-cell">{{ entity.avg_score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-message">Not enough data for top regions.</p>
+            {% endif %}
+        </section>
+
+        <!-- Top Producers -->
+        <section class="analytics-section analytics-column">
+            <h2>Top Producers</h2>
+            <p class="section-note">Minimum {{ min_count }} notes</p>
+            {% if top_producers %}
+            <table class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Producer</th>
+                        <th>Notes</th>
+                        <th>Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entity in top_producers %}
+                    <tr>
+                        <td>{{ entity.name }}</td>
+                        <td>{{ entity.count }}</td>
+                        <td class="score-cell">{{ entity.avg_score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-message">Not enough data for top producers.</p>
+            {% endif %}
+        </section>
+
+        <!-- Top Countries -->
+        <section class="analytics-section analytics-column">
+            <h2>Top Countries</h2>
+            <p class="section-note">Minimum {{ min_count }} notes</p>
+            {% if top_countries %}
+            <table class="analytics-table">
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Notes</th>
+                        <th>Avg Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entity in top_countries %}
+                    <tr>
+                        <td>{{ entity.name }}</td>
+                        <td>{{ entity.count }}</td>
+                        <td class="score-cell">{{ entity.avg_score }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p class="empty-message">Not enough data for top countries.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Descriptor Frequency -->
+    <div class="analytics-row">
+        <section class="analytics-section analytics-column">
+            <h2>Most Common Nose Descriptors</h2>
+            {% if nose_descriptors %}
+            <div class="descriptor-cloud">
+                {% set max_nose = nose_descriptors[0].count if nose_descriptors else 1 %}
+                {% for desc in nose_descriptors %}
+                <span class="descriptor-tag" style="font-size: {{ 0.8 + (desc.count / max_nose * 0.8) }}rem;">
+                    {{ desc.term }} <small>({{ desc.count }})</small>
+                </span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-message">No nose descriptors found.</p>
+            {% endif %}
+        </section>
+
+        <section class="analytics-section analytics-column">
+            <h2>Most Common Palate Descriptors</h2>
+            {% if palate_descriptors %}
+            <div class="descriptor-cloud">
+                {% set max_palate = palate_descriptors[0].count if palate_descriptors else 1 %}
+                {% for desc in palate_descriptors %}
+                <span class="descriptor-tag" style="font-size: {{ 0.8 + (desc.count / max_palate * 0.8) }}rem;">
+                    {{ desc.term }} <small>({{ desc.count }})</small>
+                </span>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-message">No palate descriptors found.</p>
+            {% endif %}
+        </section>
+    </div>
+
+    <!-- Scoring Trends -->
+    {% if scoring_trends %}
+    <section class="analytics-section">
+        <h2>Scoring Trends Over Time</h2>
+        <div class="trends-chart">
+            <table class="analytics-table trends-table">
+                <thead>
+                    <tr>
+                        <th>Period</th>
+                        <th>Notes</th>
+                        <th>Avg Score</th>
+                        <th>Trend</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% set max_trend_count = scoring_trends | map(attribute='count') | max %}
+                    {% for trend in scoring_trends %}
+                    <tr>
+                        <td>{{ trend.period }}</td>
+                        <td>{{ trend.count }}</td>
+                        <td class="score-cell">{{ trend.avg_score }}</td>
+                        <td class="trend-bar-cell">
+                            <div class="trend-bar" style="width: {{ (trend.count / max_trend_count * 100) | int }}%;"></div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Vintage Distribution -->
+    {% if vintage_distribution %}
+    <section class="analytics-section">
+        <h2>Vintage Distribution</h2>
+        <div class="vintage-chart">
+            {% set max_vintage = vintage_distribution | map(attribute=1) | max %}
+            {% for vintage, count in vintage_distribution[:15] %}
+            <div class="vintage-bar-container">
+                <span class="vintage-label">{{ vintage }}</span>
+                <div class="bar-wrapper">
+                    <div class="vintage-bar" style="width: {{ (count / max_vintage * 100) | int }}%;"></div>
+                    <span class="bar-count">{{ count }}</span>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,19 @@
+<div class="score-content editing">
+    <form action="/calibration" method="post" class="inline-calibration-form">
+        <input type="hidden" name="score_value" value="{{ score_value }}">
+        <div class="form-group">
+            <label for="description_new">Description</label>
+            <textarea id="description_new" name="description" rows="3" required
+                placeholder="What does a {{ score_value }}+ score mean to you?"></textarea>
+        </div>
+        <div class="form-group">
+            <label for="examples_new">Examples (comma-separated)</label>
+            <input type="text" id="examples_new" name="examples"
+                placeholder="e.g., 2015 Producer Name Wine">
+        </div>
+        <div class="form-actions">
+            <button type="submit" class="btn btn-small btn-primary">Save</button>
+            <a href="/calibration" class="btn btn-small">Cancel</a>
+        </div>
+    </form>
+</div>

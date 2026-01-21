@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+
+{% block title %}Revisions - {{ note.wine.producer }} {{ note.wine.cuvee }} - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/notes">Notes</a> / <a href="/notes/{{ note.id }}">{{ note.wine.producer or 'Note' }}</a> / Revisions
+    </div>
+    <h1>Revision History</h1>
+    <p class="subtitle">
+        {% if note.wine.producer %}{{ note.wine.producer }}{% endif %}
+        {% if note.wine.cuvee %} {{ note.wine.cuvee }}{% endif %}
+        {% if note.wine.vintage %} {{ note.wine.vintage }}{% endif %}
+    </p>
+</div>
+
+{% if revisions %}
+<div class="revisions-list">
+    {% for revision in revisions %}
+    <div class="revision-item">
+        <div class="revision-header">
+            <span class="revision-number">Revision #{{ loop.revindex }}</span>
+            <span class="revision-date">{{ revision.created_at.strftime('%B %d, %Y at %H:%M') }}</span>
+        </div>
+        <div class="revision-content">
+            <div class="revision-summary">
+                {% set snapshot = revision.new_snapshot %}
+                <div class="summary-row">
+                    <span class="label">Wine</span>
+                    <span class="value">
+                        {{ snapshot.wine.producer or '' }}
+                        {{ snapshot.wine.cuvee or '' }}
+                        {% if snapshot.wine.vintage %}{{ snapshot.wine.vintage }}{% endif %}
+                    </span>
+                </div>
+                {% if snapshot.scores and snapshot.scores.total %}
+                <div class="summary-row">
+                    <span class="label">Score</span>
+                    <span class="value">{{ snapshot.scores.total }}/100</span>
+                </div>
+                {% endif %}
+                {% if snapshot.overall_notes %}
+                <div class="summary-row">
+                    <span class="label">Notes</span>
+                    <span class="value preview">{{ snapshot.overall_notes[:200] }}{% if snapshot.overall_notes|length > 200 %}...{% endif %}</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <details class="revision-details">
+                <summary>View Full Snapshot</summary>
+                <div class="snapshot-content">
+                    <!-- Wine Identity -->
+                    {% if snapshot.wine %}
+                    <div class="snapshot-section">
+                        <h4>Wine Identity</h4>
+                        <dl>
+                            {% if snapshot.wine.producer %}<dt>Producer</dt><dd>{{ snapshot.wine.producer }}</dd>{% endif %}
+                            {% if snapshot.wine.cuvee %}<dt>Cuvée</dt><dd>{{ snapshot.wine.cuvee }}</dd>{% endif %}
+                            {% if snapshot.wine.vintage %}<dt>Vintage</dt><dd>{{ snapshot.wine.vintage }}</dd>{% endif %}
+                            {% if snapshot.wine.country %}<dt>Country</dt><dd>{{ snapshot.wine.country }}</dd>{% endif %}
+                            {% if snapshot.wine.region %}<dt>Region</dt><dd>{{ snapshot.wine.region }}</dd>{% endif %}
+                            {% if snapshot.wine.appellation %}<dt>Appellation</dt><dd>{{ snapshot.wine.appellation }}</dd>{% endif %}
+                            {% if snapshot.wine.grapes %}<dt>Grapes</dt><dd>{{ snapshot.wine.grapes | join(', ') }}</dd>{% endif %}
+                            {% if snapshot.wine.color %}<dt>Color</dt><dd>{{ snapshot.wine.color }}</dd>{% endif %}
+                            {% if snapshot.wine.style %}<dt>Style</dt><dd>{{ snapshot.wine.style }}</dd>{% endif %}
+                            {% if snapshot.wine.alcohol_percent %}<dt>ABV</dt><dd>{{ snapshot.wine.alcohol_percent }}%</dd>{% endif %}
+                        </dl>
+                    </div>
+                    {% endif %}
+
+                    <!-- Sensory Notes -->
+                    {% if snapshot.appearance_notes or snapshot.nose_notes or snapshot.palate_notes or snapshot.finish_notes or snapshot.overall_notes %}
+                    <div class="snapshot-section">
+                        <h4>Sensory Notes</h4>
+                        <dl>
+                            {% if snapshot.appearance_notes %}<dt>Appearance</dt><dd>{{ snapshot.appearance_notes }}</dd>{% endif %}
+                            {% if snapshot.nose_notes %}<dt>Nose</dt><dd>{{ snapshot.nose_notes }}</dd>{% endif %}
+                            {% if snapshot.palate_notes %}<dt>Palate</dt><dd>{{ snapshot.palate_notes }}</dd>{% endif %}
+                            {% if snapshot.finish_notes %}<dt>Finish</dt><dd>{{ snapshot.finish_notes }}</dd>{% endif %}
+                            {% if snapshot.structure_notes %}<dt>Structure</dt><dd>{{ snapshot.structure_notes }}</dd>{% endif %}
+                            {% if snapshot.overall_notes %}<dt>Overall</dt><dd>{{ snapshot.overall_notes }}</dd>{% endif %}
+                            {% if snapshot.conclusion %}<dt>Conclusion</dt><dd>{{ snapshot.conclusion }}</dd>{% endif %}
+                        </dl>
+                    </div>
+                    {% endif %}
+
+                    <!-- Scores -->
+                    {% if snapshot.scores and snapshot.scores.total %}
+                    <div class="snapshot-section">
+                        <h4>Scores</h4>
+                        <dl>
+                            <dt>Total</dt><dd>{{ snapshot.scores.total }}/100</dd>
+                            {% if snapshot.scores.subscores %}
+                            <dt>Appearance</dt><dd>{{ snapshot.scores.subscores.appearance }}/2</dd>
+                            <dt>Nose</dt><dd>{{ snapshot.scores.subscores.nose }}/12</dd>
+                            <dt>Palate</dt><dd>{{ snapshot.scores.subscores.palate }}/20</dd>
+                            <dt>Structure & Balance</dt><dd>{{ snapshot.scores.subscores.structure_balance }}/20</dd>
+                            <dt>Finish</dt><dd>{{ snapshot.scores.subscores.finish }}/10</dd>
+                            <dt>Typicity & Complexity</dt><dd>{{ snapshot.scores.subscores.typicity_complexity }}/16</dd>
+                            <dt>Overall Judgment</dt><dd>{{ snapshot.scores.subscores.overall_judgment }}/20</dd>
+                            {% endif %}
+                            {% if snapshot.scores.personal_enjoyment %}
+                            <dt>Personal Enjoyment</dt><dd>{{ snapshot.scores.personal_enjoyment }}/10</dd>
+                            {% endif %}
+                        </dl>
+                    </div>
+                    {% endif %}
+
+                    <!-- Readiness -->
+                    {% if snapshot.readiness %}
+                    <div class="snapshot-section">
+                        <h4>Readiness</h4>
+                        <dl>
+                            {% if snapshot.readiness.drink_or_hold %}<dt>Recommendation</dt><dd>{{ snapshot.readiness.drink_or_hold }}</dd>{% endif %}
+                            {% if snapshot.readiness.window_start_year %}<dt>Drink From</dt><dd>{{ snapshot.readiness.window_start_year }}</dd>{% endif %}
+                            {% if snapshot.readiness.window_end_year %}<dt>Drink Until</dt><dd>{{ snapshot.readiness.window_end_year }}</dd>{% endif %}
+                            {% if snapshot.readiness.notes %}<dt>Notes</dt><dd>{{ snapshot.readiness.notes }}</dd>{% endif %}
+                        </dl>
+                    </div>
+                    {% endif %}
+                </div>
+            </details>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <p>No revisions found for this note.</p>
+    <p class="hint">Revisions are created when a note is published.</p>
+</div>
+{% endif %}
+
+<div class="page-actions">
+    <a href="/notes/{{ note.id }}" class="btn btn-secondary">Back to Note</a>
+</div>
+{% endblock %}

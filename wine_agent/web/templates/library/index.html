@@ -1,0 +1,119 @@
+{% extends "base.html" %}
+
+{% block title %}Library - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="library-page">
+    <h1>Wine Library</h1>
+    <p class="subtitle">Search and browse your tasting notes</p>
+
+    <div class="library-layout">
+        <!-- Filters Sidebar -->
+        <aside class="filters-sidebar">
+            <form action="/library" method="get" class="filters-form">
+                <div class="filter-section">
+                    <h3>Search</h3>
+                    <input type="text" name="q" value="{{ filters.q }}" placeholder="Search notes..." class="search-input">
+                </div>
+
+                <div class="filter-section">
+                    <h3>Score Range</h3>
+                    <div class="range-inputs">
+                        <input type="number" name="score_min" value="{{ filters.score_min or '' }}" placeholder="Min" min="0" max="100" class="small-input">
+                        <span>to</span>
+                        <input type="number" name="score_max" value="{{ filters.score_max or '' }}" placeholder="Max" min="0" max="100" class="small-input">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Region</h3>
+                    <select name="region">
+                        <option value="">All Regions</option>
+                        {% for region in filter_options.regions %}
+                        <option value="{{ region }}" {% if filters.region == region %}selected{% endif %}>{{ region }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Country</h3>
+                    <select name="country">
+                        <option value="">All Countries</option>
+                        {% for country in filter_options.countries %}
+                        <option value="{{ country }}" {% if filters.country == country %}selected{% endif %}>{{ country }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Producer</h3>
+                    <select name="producer">
+                        <option value="">All Producers</option>
+                        {% for producer in filter_options.producers %}
+                        <option value="{{ producer }}" {% if filters.producer == producer %}selected{% endif %}>{{ producer }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Grape</h3>
+                    <select name="grape">
+                        <option value="">All Grapes</option>
+                        {% for grape in filter_options.grapes %}
+                        <option value="{{ grape }}" {% if filters.grape == grape %}selected{% endif %}>{{ grape }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Vintage</h3>
+                    <div class="range-inputs">
+                        <input type="number" name="vintage_min" value="{{ filters.vintage_min or '' }}" placeholder="From" min="1900" max="2100" class="small-input">
+                        <span>to</span>
+                        <input type="number" name="vintage_max" value="{{ filters.vintage_max or '' }}" placeholder="To" min="1900" max="2100" class="small-input">
+                    </div>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Readiness</h3>
+                    <select name="drink_or_hold">
+                        <option value="">All</option>
+                        <option value="drink" {% if filters.drink_or_hold == 'drink' %}selected{% endif %}>Drink Now</option>
+                        <option value="hold" {% if filters.drink_or_hold == 'hold' %}selected{% endif %}>Hold</option>
+                        <option value="unsure" {% if filters.drink_or_hold == 'unsure' %}selected{% endif %}>Unsure</option>
+                    </select>
+                </div>
+
+                <div class="filter-section">
+                    <h3>Status</h3>
+                    <select name="status">
+                        <option value="published" {% if filters.status == 'published' %}selected{% endif %}>Published</option>
+                        <option value="draft" {% if filters.status == 'draft' %}selected{% endif %}>Drafts</option>
+                        <option value="all" {% if filters.status == 'all' %}selected{% endif %}>All</option>
+                    </select>
+                </div>
+
+                <div class="filter-actions">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                    <a href="/library" class="btn btn-secondary">Clear</a>
+                </div>
+            </form>
+        </aside>
+
+        <!-- Results Area -->
+        <div class="results-area">
+            <div class="results-header">
+                <span class="results-count">{{ total_count }} note{% if total_count != 1 %}s{% endif %} found</span>
+                <div class="export-links">
+                    <a href="/export/csv" class="btn btn-small">Export CSV</a>
+                    <a href="/export/json" class="btn btn-small">Export JSON</a>
+                </div>
+            </div>
+
+            <div id="results-container">
+                {% include "library/results.html" %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

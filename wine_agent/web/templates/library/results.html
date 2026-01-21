@@ -1,0 +1,78 @@
+{% if notes %}
+<div class="notes-grid">
+    {% for note in notes %}
+    <article class="note-card">
+        <div class="note-header">
+            <h3>
+                <a href="/notes/{% if note.status.value == 'draft' %}draft/{% endif %}{{ note.id }}">
+                    {{ note.wine.producer or "Unknown Producer" }}
+                    {% if note.wine.cuvee %} - {{ note.wine.cuvee }}{% endif %}
+                </a>
+            </h3>
+            {% if note.wine.vintage %}
+            <span class="vintage">{{ note.wine.vintage }}</span>
+            {% endif %}
+        </div>
+
+        <div class="note-meta">
+            {% if note.wine.region or note.wine.country %}
+            <span class="location">
+                {{ note.wine.country }}{% if note.wine.region and note.wine.country %} &rarr; {% endif %}{{ note.wine.region }}
+            </span>
+            {% endif %}
+
+            {% if note.wine.grapes %}
+            <span class="grapes">{{ note.wine.grapes | join(", ") }}</span>
+            {% endif %}
+        </div>
+
+        <div class="note-score">
+            <span class="score-value">{{ note.scores.total }}</span>
+            <span class="score-max">/100</span>
+            {% if note.scores.quality_band %}
+            <span class="quality-band quality-{{ note.scores.quality_band.value }}">
+                {{ note.scores.quality_band.value | replace("_", " ") | title }}
+            </span>
+            {% endif %}
+        </div>
+
+        {% if note.conclusion %}
+        <p class="note-preview">{{ note.conclusion[:150] }}{% if note.conclusion|length > 150 %}...{% endif %}</p>
+        {% endif %}
+
+        <div class="note-footer">
+            <span class="status status-{{ note.status.value }}">{{ note.status.value | title }}</span>
+            {% if note.readiness.drink_or_hold.value != 'unsure' %}
+            <span class="readiness">{{ note.readiness.drink_or_hold.value | title }}</span>
+            {% endif %}
+            <a href="/notes/{{ note.id }}/export/md" class="export-link" title="Export as Markdown">MD</a>
+        </div>
+    </article>
+    {% endfor %}
+</div>
+
+<!-- Pagination -->
+{% if total_pages > 1 %}
+<nav class="pagination">
+    {% if page > 1 %}
+    <a href="/library?{{ build_query_string(filters, page=page-1) }}" class="page-link">&laquo; Previous</a>
+    {% endif %}
+
+    <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+
+    {% if has_more %}
+    <a href="/library?{{ build_query_string(filters, page=page+1) }}" class="page-link">Next &raquo;</a>
+    {% endif %}
+</nav>
+{% endif %}
+
+{% else %}
+<div class="no-results">
+    <p>No tasting notes found matching your criteria.</p>
+    {% if filters.q or filters.region or filters.country or filters.producer or filters.grape %}
+    <p>Try adjusting your filters or <a href="/library">clear all filters</a>.</p>
+    {% else %}
+    <p>Start by <a href="/inbox/new">adding a new tasting note</a> to your inbox.</p>
+    {% endif %}
+</div>
+{% endif %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+
+{% block title %}Inbox Item - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="breadcrumb">
+        <a href="/inbox">Inbox</a> / Item
+    </div>
+    <h1>Inbox Item</h1>
+</div>
+
+<div class="item-detail">
+    <div class="item-status-bar">
+        <span class="status {% if item.converted %}converted{% else %}open{% endif %}">
+            {% if item.converted %}Converted{% else %}Open{% endif %}
+        </span>
+        <span class="date">Created: {{ item.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        {% if item.updated_at != item.created_at %}
+        <span class="date">Updated: {{ item.updated_at.strftime('%Y-%m-%d %H:%M') }}</span>
+        {% endif %}
+    </div>
+
+    {% if item.tags %}
+    <div class="item-tags">
+        {% for tag in item.tags %}
+        <span class="tag">{{ tag }}</span>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {# Show conversion error if present #}
+    {% if conversion_error %}
+    <div class="alert alert-error">
+        <strong>Conversion Failed</strong>
+        <p>{{ conversion_error }}</p>
+        <p class="hint">You can try again or create a manual draft.</p>
+    </div>
+    {% endif %}
+
+    {# Show last conversion attempt info #}
+    {% if last_conversion and not last_conversion.success %}
+    <div class="conversion-status">
+        <h3>Last Conversion Attempt</h3>
+        <div class="conversion-info">
+            <span class="status-badge failed">Failed</span>
+            <span class="provider">Provider: {{ last_conversion.provider }} ({{ last_conversion.model }})</span>
+            <span class="date">{{ last_conversion.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+            {% if last_conversion.repair_attempts > 0 %}
+            <span class="repairs">Repair attempts: {{ last_conversion.repair_attempts }}</span>
+            {% endif %}
+        </div>
+        {% if last_conversion.error_message %}
+        <div class="error-detail">
+            <code>{{ last_conversion.error_message }}</code>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="raw-text-section">
+        <h2>Raw Notes</h2>
+        <div class="raw-text">{{ item.raw_text }}</div>
+    </div>
+
+    {% if associated_note %}
+    <div class="associated-note">
+        <h2>Associated Tasting Note</h2>
+        <p>This item has been converted to a
+            <a href="/notes/draft/{{ associated_note.id }}">draft tasting note</a>.
+        </p>
+        {% if last_conversion and last_conversion.success %}
+        <div class="conversion-info success">
+            <span class="status-badge success">AI Converted</span>
+            <span class="provider">{{ last_conversion.provider }} ({{ last_conversion.model }})</span>
+        </div>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <div class="item-actions">
+        {% if not item.converted %}
+        <form method="POST" action="/inbox/{{ item.id }}/convert" style="display: inline;">
+            <button type="submit" class="btn btn-primary">Convert with AI</button>
+        </form>
+        <form method="POST" action="/inbox/{{ item.id }}/archive" style="display: inline;">
+            <button type="submit" class="btn btn-secondary">Archive</button>
+        </form>
+        {% elif not associated_note %}
+        {# Converted but no note (archived or failed) - allow retry #}
+        <form method="POST" action="/inbox/{{ item.id }}/convert" style="display: inline;">
+            <button type="submit" class="btn btn-primary">Retry Conversion</button>
+        </form>
+        {% else %}
+        <a href="/notes/draft/{{ associated_note.id }}" class="btn btn-primary">View Draft Note</a>
+        {% endif %}
+        <a href="/inbox" class="btn btn-secondary">Back to Inbox</a>
+    </div>
+
+    {# Show conversion history if there are multiple attempts #}
+    {% if conversion_runs and conversion_runs|length > 1 %}
+    <div class="conversion-history">
+        <h3>Conversion History</h3>
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Provider</th>
+                    <th>Status</th>
+                    <th>Repairs</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for run in conversion_runs %}
+                <tr>
+                    <td>{{ run.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    <td>{{ run.provider }} ({{ run.model }})</td>
+                    <td>
+                        <span class="status-badge {% if run.success %}success{% else %}failed{% endif %}">
+                            {% if run.success %}Success{% else %}Failed{% endif %}
+                        </span>
+                    </td>
+                    <td>{{ run.repair_attempts }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

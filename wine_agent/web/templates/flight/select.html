@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+
+{% block title %}Flight Mode - Wine Agent{% endblock %}
+
+{% block content %}
+<div class="flight-page">
+    <div class="page-header">
+        <h1>Flight Mode</h1>
+        <p class="subtitle">Select 2-4 wines to compare side-by-side</p>
+    </div>
+
+    <!-- Filters -->
+    <section class="flight-filters">
+        <form action="/flight" method="get" class="filter-form">
+            <div class="filter-row">
+                <div class="filter-group">
+                    <label for="region">Region</label>
+                    <select id="region" name="region">
+                        <option value="">All Regions</option>
+                        {% for r in filter_options.regions %}
+                        <option value="{{ r }}" {% if current_filters.region == r %}selected{% endif %}>{{ r }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="filter-group">
+                    <label for="vintage_min">Vintage From</label>
+                    <input type="number" id="vintage_min" name="vintage_min" value="{{ current_filters.vintage_min or '' }}" min="1900" max="2030">
+                </div>
+                <div class="filter-group">
+                    <label for="vintage_max">Vintage To</label>
+                    <input type="number" id="vintage_max" name="vintage_max" value="{{ current_filters.vintage_max or '' }}" min="1900" max="2030">
+                </div>
+                <button type="submit" class="btn">Filter</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Selection Form -->
+    <form id="flight-form" action="/flight/compare" method="get">
+        <input type="hidden" name="ids" id="selected-ids" value="">
+        <div class="flight-actions">
+            <span class="selected-count">Selected: <span id="selection-count">0</span> / 4</span>
+            <button type="submit" class="btn btn-primary" id="compare-btn" disabled>Compare Selected</button>
+        </div>
+
+        <!-- Notes Grid -->
+        <div class="flight-notes-grid">
+            {% if notes %}
+            {% for note in notes %}
+            <div class="flight-note-card">
+                <label class="flight-checkbox-label">
+                    <input type="checkbox" name="note_id" value="{{ note.id }}" class="flight-checkbox" onchange="updateSelection()">
+                    <div class="flight-note-content">
+                        <div class="flight-note-header">
+                            <span class="flight-note-score">{{ note.scores.total }}</span>
+                            <span class="flight-note-vintage">{{ note.wine.vintage or 'NV' }}</span>
+                        </div>
+                        <h3 class="flight-note-producer">{{ note.wine.producer }}</h3>
+                        <p class="flight-note-cuvee">{{ note.wine.cuvee }}</p>
+                        <div class="flight-note-meta">
+                            <span>{{ note.wine.region }}</span>
+                            <span>{{ note.wine.country }}</span>
+                        </div>
+                        {% if note.wine.grapes %}
+                        <p class="flight-note-grapes">{{ note.wine.grapes | join(', ') }}</p>
+                        {% endif %}
+                    </div>
+                </label>
+            </div>
+            {% endfor %}
+            {% else %}
+            <p class="empty-message">No published notes found. Create and publish some tasting notes first.</p>
+            {% endif %}
+        </div>
+    </form>
+</div>
+
+<script>
+function updateSelection() {
+    const checkboxes = document.querySelectorAll('.flight-checkbox:checked');
+    const count = checkboxes.length;
+    document.getElementById('selection-count').textContent = count;
+
+    const compareBtn = document.getElementById('compare-btn');
+    compareBtn.disabled = count < 2 || count > 4;
+
+    // Update hidden input with selected IDs
+    const ids = Array.from(checkboxes).map(cb => cb.value).join(',');
+    document.getElementById('selected-ids').value = ids;
+
+    // Disable additional checkboxes if 4 selected
+    const allCheckboxes = document.querySelectorAll('.flight-checkbox');
+    allCheckboxes.forEach(cb => {
+        if (!cb.checked && count >= 4) {
+            cb.disabled = true;
+            cb.closest('.flight-note-card').classList.add('disabled');
+        } else {
+            cb.disabled = false;
+            cb.closest('.flight-note-card').classList.remove('disabled');
+        }
+    });
+}
+</script>
+{% endblock %}
