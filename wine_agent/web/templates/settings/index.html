@@ -26,6 +26,92 @@
         </div>
     </section>
 
+    <!-- Subscription Tier -->
+    {% if tier_info %}
+    <section class="settings-section">
+        <h2>Subscription</h2>
+        <div class="settings-card">
+            <div class="settings-row">
+                <span class="settings-label">Current Tier</span>
+                <span class="settings-value">
+                    <span class="tier-badge tier-{{ tier_info.current_tier }}">{{ tier_info.current_tier|upper }}</span>
+                </span>
+            </div>
+            <div class="settings-row">
+                <span class="settings-label">Features Enabled</span>
+                <span class="settings-value">{{ tier_info.features_count }} / {{ tier_info.total_features }}</span>
+            </div>
+            {% if tier_info.limits.max_wines %}
+            <div class="settings-row">
+                <span class="settings-label">Wine Limit</span>
+                <span class="settings-value">{{ tier_info.limits.max_wines }} wines</span>
+            </div>
+            {% else %}
+            <div class="settings-row">
+                <span class="settings-label">Wine Limit</span>
+                <span class="settings-value">Unlimited</span>
+            </div>
+            {% endif %}
+            {% if tier_info.is_expired %}
+            <div class="settings-row">
+                <span class="settings-label">Status</span>
+                <span class="settings-value">
+                    <span class="status-badge status-warning">Expired</span>
+                </span>
+            </div>
+            {% endif %}
+            {% if tier_info.expires_at %}
+            <div class="settings-row">
+                <span class="settings-label">Expires</span>
+                <span class="settings-value">{{ tier_info.expires_at }}</span>
+            </div>
+            {% endif %}
+            {% if tier_info.email %}
+            <div class="settings-row">
+                <span class="settings-label">Account Email</span>
+                <span class="settings-value">{{ tier_info.email }}</span>
+            </div>
+            {% endif %}
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Developer Tools (only visible in dev mode) -->
+    {% if dev_mode %}
+    <section class="settings-section dev-tools">
+        <h2>🛠️ Developer Tools</h2>
+        <div class="settings-card dev-card">
+            <div class="dev-notice">
+                <strong>Dev Mode Active</strong> — This section is only visible because <code>WINE_AGENT_DEV_MODE=true</code>
+            </div>
+            <div class="tier-switcher">
+                <h3>Switch Subscription Tier</h3>
+                <p class="settings-note">Test tier-gated features by switching between subscription tiers.</p>
+                <form action="/settings/dev/switch-tier" method="post" class="tier-switch-form">
+                    <div class="tier-options">
+                        {% for tier in all_tiers %}
+                        <label class="tier-option {% if tier_info and tier == tier_info.current_tier %}active{% endif %}">
+                            <input type="radio" name="tier" value="{{ tier }}" {% if tier_info and tier == tier_info.current_tier %}checked{% endif %}>
+                            <span class="tier-option-content">
+                                <span class="tier-name">{{ tier|upper }}</span>
+                                {% if tier == 'free' %}
+                                <span class="tier-desc">25 wines, basic features</span>
+                                {% elif tier == 'pro' %}
+                                <span class="tier-desc">Unlimited, AI conversion, exports</span>
+                                {% elif tier == 'cellar' %}
+                                <span class="tier-desc">All features, aging notes, analytics</span>
+                                {% endif %}
+                            </span>
+                        </label>
+                        {% endfor %}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Switch Tier</button>
+                </form>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
     <!-- AI Configuration -->
     <section class="settings-section">
         <h2>AI Conversion</h2>
@@ -155,11 +241,26 @@
     <section class="settings-section">
         <h2>Data Export</h2>
         <div class="settings-card">
+            {% if can_export_json and can_export_csv %}
             <div class="export-links">
                 <a href="/export/json" class="btn btn-secondary">Export All as JSON</a>
                 <a href="/export/csv" class="btn btn-secondary">Export All as CSV</a>
             </div>
             <p class="settings-note">Exports include all published notes. Individual notes can be exported as Markdown from their detail pages.</p>
+            {% else %}
+            <div class="feature-locked">
+                <div class="feature-locked-header">
+                    <span class="feature-locked-icon">🔒</span>
+                    <span class="feature-locked-title">PRO Feature</span>
+                </div>
+                <p class="feature-locked-message">Data export requires <strong>PRO</strong> tier or higher.</p>
+                <div class="export-links">
+                    <span class="btn btn-secondary btn-disabled" title="Requires PRO tier">Export All as JSON</span>
+                    <span class="btn btn-secondary btn-disabled" title="Requires PRO tier">Export All as CSV</span>
+                </div>
+                <p class="settings-note">Upgrade to PRO to export your tasting notes in JSON, CSV, and Markdown formats.</p>
+            </div>
+            {% endif %}
         </div>
     </section>
 </div>

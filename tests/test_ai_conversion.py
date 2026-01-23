@@ -484,6 +484,81 @@ class TestTastingNoteValidation:
         assert note.scores.quality_band == QualityBand.POOR
 
 
+class TestSanitizeAIResponse:
+    """Tests for the sanitize_ai_response function."""
+
+    def test_converts_null_strings_to_empty(self) -> None:
+        """Test that null values for string fields become empty strings."""
+        from wine_agent.services.ai.client import sanitize_ai_response
+
+        data = {
+            "wine": {
+                "producer": None,
+                "cuvee": "Test Wine",
+                "region": None,
+            },
+            "context": {
+                "location": None,
+                "occasion": "Dinner",
+            },
+            "nose_notes": None,
+            "palate_notes": "Fruity and complex",
+        }
+
+        result = sanitize_ai_response(data)
+
+        # Null string fields should become empty strings
+        assert result["wine"]["producer"] == ""
+        assert result["wine"]["region"] == ""
+        assert result["context"]["location"] == ""
+        assert result["nose_notes"] == ""
+
+        # Non-null values should be preserved
+        assert result["wine"]["cuvee"] == "Test Wine"
+        assert result["context"]["occasion"] == "Dinner"
+        assert result["palate_notes"] == "Fruity and complex"
+
+    def test_pydantic_validates_after_sanitization(self) -> None:
+        """Test that sanitized data passes Pydantic validation."""
+        from wine_agent.services.ai.client import sanitize_ai_response
+
+        # This is similar to what the AI might return - nulls for unknown fields
+        ai_response = {
+            "wine": {
+                "producer": None,
+                "cuvee": None,
+                "vintage": 2020,
+                "country": "France",
+                "region": "Burgundy",
+                "subregion": None,
+                "appellation": None,
+                "vineyard": None,
+                "grapes": ["Pinot Noir"],
+                "color": "red",
+            },
+            "context": {
+                "location": None,
+                "glassware": None,
+                "companions": None,
+                "occasion": None,
+                "food_pairing": None,
+            },
+            "nose_notes": "Cherry and earth",
+            "palate_notes": None,
+            "appearance_notes": None,
+        }
+
+        sanitized = sanitize_ai_response(ai_response)
+        # This should not raise a validation error
+        note = TastingNote.model_validate(sanitized)
+
+        assert note.wine.producer == ""
+        assert note.wine.vintage == 2020
+        assert note.wine.region == "Burgundy"
+        assert note.nose_notes == "Cherry and earth"
+        assert note.palate_notes == ""
+
+
 class TestAIProviderEnum:
     """Tests for AIProvider enum."""
 

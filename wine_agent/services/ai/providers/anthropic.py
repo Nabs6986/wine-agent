@@ -17,6 +17,58 @@ logger = logging.getLogger(__name__)
 DEFAULT_MODEL = "claude-sonnet-4-20250514"
 MAX_REPAIR_ATTEMPTS = 2
 
+# Fields that should be empty strings instead of null
+# These match the TastingNote schema where str fields have default=""
+STRING_FIELDS_BY_PATH = {
+    "wine": ["producer", "cuvee", "country", "region", "subregion", "appellation", "vineyard"],
+    "context": ["location", "glassware", "companions", "occasion", "food_pairing", "mood"],
+    "purchase": ["store"],
+    "provenance": ["storage_notes"],
+    "confidence": ["uncertainty_notes"],
+    "faults": ["notes"],
+    "readiness": ["notes"],
+    "pairing": [],
+    "descriptors": [],
+}
+
+# Top-level string fields
+TOP_LEVEL_STRING_FIELDS = [
+    "appearance_notes", "nose_notes", "palate_notes", "structure_notes",
+    "finish_notes", "typicity_notes", "overall_notes", "conclusion",
+]
+
+
+def _sanitize_nulls_to_empty_strings(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    Convert null values to empty strings for string fields.
+
+    The AI often returns null for optional string fields, but our Pydantic
+    models expect empty strings (str with default="") not None.
+
+    Args:
+        data: The parsed JSON dict from the AI.
+
+    Returns:
+        Sanitized dict with nulls converted to empty strings where appropriate.
+    """
+    result = data.copy()
+
+    # Handle nested objects
+    for parent_key, string_fields in STRING_FIELDS_BY_PATH.items():
+        if parent_key in result and isinstance(result[parent_key], dict):
+            nested = result[parent_key].copy()
+            for field in string_fields:
+                if field in nested and nested[field] is None:
+                    nested[field] = ""
+            result[parent_key] = nested
+
+    # Handle top-level string fields
+    for field in TOP_LEVEL_STRING_FIELDS:
+        if field in result and result[field] is None:
+            result[field] = ""
+
+    return result
+
 
 class AnthropicClient(AIClient):
     """Anthropic Claude AI client."""
@@ -67,7 +119,8 @@ class AnthropicClient(AIClient):
             )
 
             raw_response = response.content[0].text
-            logger.debug(f"Raw AI response: {raw_response[:500]}...")
+            logger.info(f"AI conversion received response ({len(raw_response)} chars)")
+            logger.debug(f"Raw AI response: {raw_response[:1000]}...")
 
         except Exception as e:
             logger.error(f"Anthropic API error: {e}")
@@ -150,9 +203,40 @@ class AnthropicClient(AIClient):
                 repair_attempts=repair_attempts,
             )
 
-        # Step 2: Validate against Pydantic model
+        # Step 2: Sanitize nulls to empty strings before Pydantic validation
+        # The AI often returns null for optional string fields, but our schema expects ""
+        sanitized_json = _sanitize_nulls_to_empty_strings(parsed_json)
+
+        # Step 3: Validate against Pydantic model
         try:
-            tasting_note = TastingNote.model_validate(parsed_json)
+            tasting_note = TastingNote.model_validate(sanitized_json)
+
+            # Check if we got meaningful data (at least some wine identity info)
+            has_wine_data = bool(
+                tasting_note.wine.producer
+                or tasting_note.wine.cuvee
+                or tasting_note.wine.vintage
+                or tasting_note.wine.region
+            )
+            has_notes_data = bool(
+                tasting_note.nose_notes
+                or tasting_note.palate_notes
+                or tasting_note.appearance_notes
+            )
+
+            logger.info(
+                f"AI conversion parsed: has_wine_data={has_wine_data}, "
+                f"has_notes_data={has_notes_data}, "
+                f"producer='{tasting_note.wine.producer}', "
+                f"cuvee='{tasting_note.wine.cuvee}'"
+            )
+
+            if not has_wine_data and not has_notes_data:
+                logger.warning("AI returned valid JSON but with no meaningful wine/notes data")
+                logger.debug(f"Parsed JSON keys: {list(parsed_json.keys())}")
+                if "wine" in parsed_json:
+                    logger.debug(f"Wine data: {parsed_json['wine']}")
+
             return GenerationResult(
                 success=True,
                 raw_response=raw_response,

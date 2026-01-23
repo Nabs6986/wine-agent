@@ -5,8 +5,28 @@
 {% block content %}
 <div class="page-header">
     <h1>Inbox</h1>
+    {% if wine_limit and wine_count >= wine_limit %}
+    <span class="btn btn-primary btn-disabled" title="Wine limit reached">New Note</span>
+    {% else %}
     <a href="/inbox/new" class="btn btn-primary">New Note</a>
+    {% endif %}
 </div>
+
+{% if wine_limit %}
+<div class="wine-usage">
+    <span class="wine-usage-text"><strong>{{ wine_count }}</strong> / {{ wine_limit }} wines</span>
+    <div class="wine-usage-bar">
+        {% set usage_percent = (wine_count / wine_limit * 100)|int %}
+        <div class="wine-usage-fill {% if usage_percent >= 100 %}full{% elif usage_percent >= 80 %}warning{% endif %}"
+             style="width: {{ [usage_percent, 100]|min }}%"></div>
+    </div>
+    {% if wine_count >= wine_limit %}
+    <span class="upgrade-prompt">
+        Upgrade to <span class="tier-badge tier-pro">PRO</span> for unlimited wines
+    </span>
+    {% endif %}
+</div>
+{% endif %}
 
 <div class="filters">
     <a href="/inbox?filter=open" class="filter-btn {% if current_filter == 'open' %}active{% endif %}">Open</a>

@@ -3,6 +3,7 @@
 import sys
 import tempfile
 from contextlib import contextmanager
+from datetime import UTC, datetime
 from pathlib import Path
 from uuid import uuid4
 
@@ -13,7 +14,7 @@ from sqlalchemy.orm import sessionmaker
 
 from wine_agent.core.enums import NoteSource, NoteStatus
 from wine_agent.core.schema import InboxItem, TastingNote
-from wine_agent.db.models import Base
+from wine_agent.db.models import AppConfigurationDB, Base
 from wine_agent.db.repositories import InboxRepository, TastingNoteRepository
 
 
@@ -26,10 +27,26 @@ def temp_db_path():
 
 @pytest.fixture
 def test_engine(temp_db_path):
-    """Create a test database engine."""
+    """Create a test database engine with PRO tier configured."""
     url = f"sqlite:///{temp_db_path}"
     engine = create_engine(url, echo=False)
     Base.metadata.create_all(engine)
+
+    # Set up PRO tier so conversion tests work
+    SessionLocal = sessionmaker(bind=engine)
+    session = SessionLocal()
+    try:
+        config = AppConfigurationDB(
+            id=1,
+            subscription_tier="pro",  # PRO tier for tests
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
+        )
+        session.add(config)
+        session.commit()
+    finally:
+        session.close()
+
     yield engine
     engine.dispose()
 
@@ -71,9 +88,10 @@ def client(test_engine, monkeypatch):
     from wine_agent.web.app import create_app
     app = create_app()
 
-    # Apply the session monkeypatch to the routes
+    # Apply the session monkeypatch to the routes and dependencies
     monkeypatch.setattr("wine_agent.web.routes.inbox.get_session", mock_get_session)
     monkeypatch.setattr("wine_agent.web.routes.notes.get_session", mock_get_session)
+    monkeypatch.setattr("wine_agent.web.dependencies.get_session", mock_get_session)
 
     return TestClient(app)
 
@@ -324,3 +342,90 @@ class TestFullWorkflow:
         second_note_url = second_convert.headers["location"]
 
         assert first_note_url == second_note_url
+
+
+class TestTierSwitcher:
+    """Tests for developer mode tier switcher."""
+
+    def test_tier_switcher_disabled_by_default(self, client: TestClient) -> None:
+        """Test tier switch endpoint redirects when dev mode is disabled."""
+        # By default, WINE_AGENT_DEV_MODE is not set
+        response = client.post(
+            "/settings/dev/switch-tier",
+            data={"tier": "cellar"},
+            follow_redirects=False,
+        )
+        # Should silently redirect without changing tier
+        assert response.status_code == 303
+        assert response.headers["location"] == "/settings"
+
+    def test_tier_switcher_works_in_dev_mode(
+        self, test_engine, monkeypatch
+    ) -> None:
+        """Test tier switch endpoint works when dev mode is enabled."""
+        import os
+        from contextlib import contextmanager
+
+        from sqlalchemy.orm import sessionmaker
+
+        # Enable dev mode
+        monkeypatch.setenv("WINE_AGENT_DEV_MODE", "true")
+
+        # Create session factory for the test engine
+        TestSessionLocal = sessionmaker(bind=test_engine)
+
+        @contextmanager
+        def mock_get_session():
+            session = TestSessionLocal()
+            try:
+                yield session
+            finally:
+                session.close()
+
+        # Remove cached modules to force reimport
+        modules_to_remove = [key for key in sys.modules if key.startswith("wine_agent.web")]
+        for mod in modules_to_remove:
+            del sys.modules[mod]
+
+        # Mock run_migrations before importing
+        import wine_agent.db.engine
+        monkeypatch.setattr(wine_agent.db.engine, "run_migrations", lambda: None)
+
+        from wine_agent.web.app import create_app
+        app = create_app()
+
+        # Apply monkeypatches
+        monkeypatch.setattr("wine_agent.web.routes.inbox.get_session", mock_get_session)
+        monkeypatch.setattr("wine_agent.web.routes.notes.get_session", mock_get_session)
+        monkeypatch.setattr("wine_agent.web.routes.settings.get_session", mock_get_session)
+        monkeypatch.setattr("wine_agent.web.dependencies.get_session", mock_get_session)
+
+        client = TestClient(app)
+
+        # Settings page should show developer tools
+        settings_response = client.get("/settings")
+        assert settings_response.status_code == 200
+        assert "Developer Tools" in settings_response.text
+        assert "Switch Subscription Tier" in settings_response.text
+
+        # Switch to CELLAR tier
+        switch_response = client.post(
+            "/settings/dev/switch-tier",
+            data={"tier": "cellar"},
+            follow_redirects=False,
+        )
+        assert switch_response.status_code == 303
+
+        # Verify tier changed
+        settings_after = client.get("/settings")
+        assert "CELLAR" in settings_after.text
+
+        # Switch back to FREE tier
+        client.post(
+            "/settings/dev/switch-tier",
+            data={"tier": "free"},
+            follow_redirects=False,
+        )
+
+        settings_free = client.get("/settings")
+        assert "FREE" in settings_free.text

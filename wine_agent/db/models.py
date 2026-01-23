@@ -175,3 +175,48 @@ class CalibrationNoteDB(Base):
 
     def __repr__(self) -> str:
         return f"<CalibrationNoteDB(id={self.id}, score={self.score_value})>"
+
+
+class AppConfigurationDB(Base):
+    """
+    Database model for application configuration (singleton).
+
+    Stores subscription tier, license key, and other app-wide settings.
+    Only one row should exist (enforced by id = 1 constraint).
+    """
+
+    __tablename__ = "app_configuration"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)  # Always 1
+    license_key: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    license_validated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    subscription_tier: Mapped[str] = mapped_column(String(20), default="free")  # free/pro/cellar
+    tier_expires_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    machine_id: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=_utc_now, onupdate=_utc_now)
+
+    def __repr__(self) -> str:
+        return f"<AppConfigurationDB(tier={self.subscription_tier}, expires={self.tier_expires_at})>"
+
+
+class MigrationLogDB(Base):
+    """
+    Database model for migration audit log.
+
+    Tracks data migrations for auditing and rollback purposes.
+    """
+
+    __tablename__ = "migration_log"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=_generate_uuid)
+    migration_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    started_at: Mapped[datetime] = mapped_column(DateTime, nullable=False, default=_utc_now)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    status: Mapped[str] = mapped_column(String(20), default="pending")  # pending/success/failed/rollback
+    details_json: Mapped[str] = mapped_column(Text, default="{}")
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    def __repr__(self) -> str:
+        return f"<MigrationLogDB(name={self.migration_name}, status={self.status})>"

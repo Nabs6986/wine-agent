@@ -9,6 +9,57 @@ from pydantic import BaseModel
 from wine_agent.core.schema import TastingNote
 
 
+# Fields that should be empty strings instead of null
+# These match the TastingNote schema where str fields have default=""
+_STRING_FIELDS_BY_PATH = {
+    "wine": ["producer", "cuvee", "country", "region", "subregion", "appellation", "vineyard"],
+    "context": ["location", "glassware", "companions", "occasion", "food_pairing", "mood"],
+    "purchase": ["store"],
+    "provenance": ["storage_notes"],
+    "confidence": ["uncertainty_notes"],
+    "faults": ["notes"],
+    "readiness": ["notes"],
+}
+
+# Top-level string fields
+_TOP_LEVEL_STRING_FIELDS = [
+    "appearance_notes", "nose_notes", "palate_notes", "structure_notes",
+    "finish_notes", "typicity_notes", "overall_notes", "conclusion",
+]
+
+
+def sanitize_ai_response(data: dict[str, Any]) -> dict[str, Any]:
+    """
+    Convert null values to empty strings for string fields.
+
+    The AI often returns null for optional string fields, but our Pydantic
+    models expect empty strings (str with default="") not None.
+
+    Args:
+        data: The parsed JSON dict from the AI.
+
+    Returns:
+        Sanitized dict with nulls converted to empty strings where appropriate.
+    """
+    result = data.copy()
+
+    # Handle nested objects
+    for parent_key, string_fields in _STRING_FIELDS_BY_PATH.items():
+        if parent_key in result and isinstance(result[parent_key], dict):
+            nested = result[parent_key].copy()
+            for field in string_fields:
+                if field in nested and nested[field] is None:
+                    nested[field] = ""
+            result[parent_key] = nested
+
+    # Handle top-level string fields
+    for field in _TOP_LEVEL_STRING_FIELDS:
+        if field in result and result[field] is None:
+            result[field] = ""
+
+    return result
+
+
 class AIProvider(str, Enum):
     """Supported AI providers."""
 

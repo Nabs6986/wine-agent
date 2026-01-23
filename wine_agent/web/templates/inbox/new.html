@@ -7,6 +7,43 @@
     <h1>New Tasting Note</h1>
 </div>
 
+{% if wine_limit %}
+<div class="wine-usage">
+    <span class="wine-usage-text"><strong>{{ wine_count }}</strong> / {{ wine_limit }} wines</span>
+    <div class="wine-usage-bar">
+        {% set usage_percent = (wine_count / wine_limit * 100)|int %}
+        <div class="wine-usage-fill {% if usage_percent >= 100 %}full{% elif usage_percent >= 80 %}warning{% endif %}"
+             style="width: {{ [usage_percent, 100]|min }}%"></div>
+    </div>
+</div>
+{% endif %}
+
+{% if error %}
+<div class="alert alert-error">
+    <strong>Cannot save:</strong> {{ error }}
+    {% if show_upgrade %}
+    <div class="upgrade-prompt" style="margin-top: var(--space-sm);">
+        Upgrade to <span class="tier-badge tier-pro">PRO</span> for unlimited wines
+    </div>
+    {% endif %}
+</div>
+{% endif %}
+
+{% if limit_reached %}
+<div class="feature-locked">
+    <div class="feature-locked-header">
+        <span class="feature-locked-icon">🔒</span>
+        <span class="feature-locked-title">Wine Limit Reached</span>
+    </div>
+    <p class="feature-locked-message">
+        You've reached the maximum of <strong>{{ wine_limit }} wines</strong> on the FREE tier.
+    </p>
+    <p class="settings-note">
+        Upgrade to <strong>PRO</strong> for unlimited wines, AI-powered conversion, and data exports.
+    </p>
+    <a href="/inbox" class="btn btn-secondary">Back to Inbox</a>
+</div>
+{% else %}
 <form method="POST" action="/inbox" class="form">
     <div class="form-group">
         <label for="raw_text">Tasting Notes</label>
@@ -21,7 +58,7 @@ Example:
 Deep ruby with garnet edge. Intense nose of rose petals, red cherry, and exotic spices.
 On the palate, silky tannins with remarkable precision..."
             required
-        ></textarea>
+        >{{ raw_text if raw_text else '' }}</textarea>
         <small>Enter your free-form tasting notes. They will be converted to a structured format using AI.</small>
     </div>
 
@@ -31,6 +68,7 @@ On the palate, silky tannins with remarkable precision..."
             type="text"
             name="tags"
             id="tags"
+            value="{{ tags if tags else '' }}"
             placeholder="burgundy, pinot noir, special occasion"
         >
         <small>Comma-separated tags for organization</small>
@@ -41,4 +79,5 @@ On the palate, silky tannins with remarkable precision..."
         <button type="submit" class="btn btn-primary">Save to Inbox</button>
     </div>
 </form>
+{% endif %}
 {% endblock %}

@@ -118,11 +118,14 @@ class ConversionService:
             )
 
         # Generate structured note
+        logger.info(f"Starting AI conversion for inbox item {inbox_item_id}")
+        logger.debug(f"Raw text to convert ({len(inbox_item.raw_text)} chars): {inbox_item.raw_text[:200]}...")
         try:
             result = self.ai_client.generate_structured_note(
                 raw_text=inbox_item.raw_text,
                 hints=hints,
             )
+            logger.info(f"AI generation completed: success={result.success}, has_note={result.tasting_note is not None}")
         except Exception as e:
             logger.error(f"AI conversion failed: {e}")
             return ConversionResult(
@@ -165,13 +168,49 @@ class ConversionService:
                 error_message="AI returned success but no tasting note",
             )
 
+        # Check if AI actually extracted meaningful data
+        has_wine_identity = bool(
+            tasting_note.wine.producer
+            or tasting_note.wine.cuvee
+            or tasting_note.wine.vintage
+            or tasting_note.wine.region
+        )
+        has_tasting_notes = bool(
+            tasting_note.nose_notes
+            or tasting_note.palate_notes
+            or tasting_note.appearance_notes
+            or tasting_note.overall_notes
+        )
+
+        if not has_wine_identity and not has_tasting_notes:
+            logger.warning("AI parsing succeeded but extracted no meaningful wine data")
+            print(f"[AI CONVERSION WARNING] No meaningful data extracted from AI response!")
+            print(f"  Raw response length: {len(result.raw_response)} chars")
+            print(f"  Parsed JSON keys: {list(result.parsed_json.keys()) if result.parsed_json else 'None'}")
+            if result.parsed_json and "wine" in result.parsed_json:
+                print(f"  Wine data: {result.parsed_json['wine']}")
+
         # Set required fields for the note
         tasting_note.inbox_item_id = UUID(str(inbox_item_id)) if isinstance(inbox_item_id, str) else inbox_item_id
         tasting_note.source = NoteSource.INBOX_CONVERTED
         tasting_note.status = NoteStatus.DRAFT
 
         # Save the tasting note
+        logger.info(
+            f"Saving tasting note: producer='{tasting_note.wine.producer}', "
+            f"cuvee='{tasting_note.wine.cuvee}', vintage={tasting_note.wine.vintage}"
+        )
+        # Print for debugging (logs may not show in uvicorn)
+        print(f"\n[AI CONVERSION] Extracted wine data:")
+        print(f"  Producer: '{tasting_note.wine.producer}'")
+        print(f"  Cuvee: '{tasting_note.wine.cuvee}'")
+        print(f"  Vintage: {tasting_note.wine.vintage}")
+        print(f"  Region: '{tasting_note.wine.region}'")
+        print(f"  Nose notes: '{tasting_note.nose_notes[:100]}...'" if tasting_note.nose_notes else "  Nose notes: (empty)")
+
         saved_note = self.note_repo.create(tasting_note)
+        logger.info(f"Saved tasting note with id={saved_note.id}")
+        print(f"[AI CONVERSION] Saved note with id={saved_note.id}\n")
 
         # Update conversion run with resulting note ID
         conversion_run.resulting_note_id = saved_note.id

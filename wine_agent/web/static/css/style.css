@@ -3535,6 +3535,263 @@ details[open] summary {
 }
 
 /* ====================================================
+   Tier Badges & Developer Tools
+   ==================================================== */
+
+/* Tier badges */
+.tier-badge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: var(--radius);
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tier-badge.tier-free {
+    background-color: var(--color-stone);
+    color: var(--color-text);
+}
+
+.tier-badge.tier-pro {
+    background: linear-gradient(135deg, var(--color-olive) 0%, var(--color-olive-light) 100%);
+    color: white;
+}
+
+.tier-badge.tier-cellar {
+    background: linear-gradient(135deg, var(--color-wine) 0%, var(--color-terracotta) 100%);
+    color: white;
+}
+
+/* Developer Tools Section */
+.dev-tools h2 {
+    color: var(--color-terracotta);
+}
+
+.dev-card {
+    border: 2px dashed var(--color-terracotta);
+    background-color: var(--color-warning-light);
+}
+
+.dev-notice {
+    background-color: var(--color-warning);
+    color: white;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+    margin-bottom: var(--space-lg);
+}
+
+.dev-notice code {
+    background-color: rgba(255, 255, 255, 0.2);
+    padding: 0.1rem 0.3rem;
+    border-radius: 3px;
+}
+
+.tier-switcher h3 {
+    margin-bottom: var(--space-sm);
+    font-size: 1.1rem;
+}
+
+.tier-switch-form {
+    margin-top: var(--space-md);
+}
+
+.tier-options {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-lg);
+}
+
+.tier-option {
+    display: flex;
+    align-items: center;
+    padding: var(--space-md);
+    background-color: var(--color-surface);
+    border: 2px solid var(--color-border);
+    border-radius: var(--radius);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+
+.tier-option:hover {
+    border-color: var(--color-primary-light);
+    box-shadow: var(--shadow);
+}
+
+.tier-option.active {
+    border-color: var(--color-primary);
+    background-color: var(--color-limestone);
+}
+
+.tier-option input[type="radio"] {
+    margin-right: var(--space-md);
+    accent-color: var(--color-primary);
+    width: 18px;
+    height: 18px;
+}
+
+.tier-option-content {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+}
+
+.tier-name {
+    font-weight: 600;
+    font-size: 1rem;
+    color: var(--color-text);
+}
+
+.tier-desc {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+}
+
+@media (min-width: 600px) {
+    .tier-options {
+        flex-direction: row;
+    }
+
+    .tier-option {
+        flex: 1;
+        flex-direction: column;
+        text-align: center;
+    }
+
+    .tier-option input[type="radio"] {
+        margin-right: 0;
+        margin-bottom: var(--space-sm);
+    }
+
+    .tier-option-content {
+        align-items: center;
+    }
+}
+
+/* ====================================================
+   Feature Locked / Entitlement UI
+   ==================================================== */
+
+/* Feature locked container */
+.feature-locked {
+    text-align: center;
+    padding: var(--space-md);
+    background: linear-gradient(135deg, var(--color-limestone) 0%, var(--color-stone) 100%);
+    border-radius: var(--radius);
+    border: 1px dashed var(--color-border);
+}
+
+.feature-locked-header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-sm);
+    margin-bottom: var(--space-sm);
+}
+
+.feature-locked-icon {
+    font-size: 1.5rem;
+}
+
+.feature-locked-title {
+    font-weight: 600;
+    color: var(--color-text);
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.feature-locked-message {
+    color: var(--color-text-secondary);
+    margin-bottom: var(--space-md);
+}
+
+.feature-locked-message strong {
+    color: var(--color-primary);
+}
+
+/* Disabled button styles */
+.btn-disabled,
+.btn.btn-disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+    background-color: var(--color-stone);
+    color: var(--color-text-secondary);
+    border-color: var(--color-border);
+}
+
+.btn-disabled:hover {
+    transform: none;
+    box-shadow: none;
+}
+
+/* Wine usage indicator */
+.wine-usage {
+    display: flex;
+    align-items: center;
+    gap: var(--space-md);
+    padding: var(--space-md);
+    background-color: var(--color-limestone);
+    border-radius: var(--radius);
+    margin-bottom: var(--space-lg);
+}
+
+.wine-usage-bar {
+    flex: 1;
+    height: 8px;
+    background-color: var(--color-stone);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.wine-usage-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--color-olive) 0%, var(--color-olive-light) 100%);
+    border-radius: 4px;
+    transition: width var(--transition-normal);
+}
+
+.wine-usage-fill.warning {
+    background: linear-gradient(90deg, var(--color-warning) 0%, var(--color-terracotta) 100%);
+}
+
+.wine-usage-fill.full {
+    background: linear-gradient(90deg, var(--color-error) 0%, var(--color-wine) 100%);
+}
+
+.wine-usage-text {
+    font-size: 0.85rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+}
+
+.wine-usage-text strong {
+    color: var(--color-text);
+}
+
+/* Upgrade prompt inline */
+.upgrade-prompt {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: var(--space-xs) var(--space-sm);
+    background-color: var(--color-limestone);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.8rem;
+    color: var(--color-text-secondary);
+}
+
+.upgrade-prompt .tier-badge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.5rem;
+}
+
+/* ====================================================
    Print Styles
    ==================================================== */
 @media print {

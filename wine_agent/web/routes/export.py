@@ -1,18 +1,28 @@
-"""Export routes for downloading tasting notes in various formats."""
+"""Export routes for downloading tasting notes in various formats.
 
-from fastapi import APIRouter, HTTPException
+Export features require PRO tier or higher.
+"""
+
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import Response
 
+from wine_agent.core.entitlements import EntitlementResult, Feature
 from wine_agent.db.engine import get_session
 from wine_agent.services.export_service import ExportService
+from wine_agent.web.dependencies import require_feature
 
 router = APIRouter(tags=["export"])
 
 
 @router.get("/notes/{note_id}/export/md")
-async def export_note_markdown(note_id: str) -> Response:
+async def export_note_markdown(
+    note_id: str,
+    _: EntitlementResult = Depends(require_feature(Feature.EXPORT_PDF)),  # Markdown uses same entitlement as PDF
+) -> Response:
     """
     Export a single tasting note as Markdown with YAML frontmatter.
+
+    Requires PRO tier or higher.
 
     Args:
         note_id: The UUID of the note to export.
@@ -40,9 +50,14 @@ async def export_note_markdown(note_id: str) -> Response:
 
 
 @router.get("/export/csv")
-async def export_notes_csv(status: str = "published") -> Response:
+async def export_notes_csv(
+    status: str = "published",
+    _: EntitlementResult = Depends(require_feature(Feature.EXPORT_CSV)),
+) -> Response:
     """
     Export all tasting notes as CSV.
+
+    Requires PRO tier or higher.
 
     Args:
         status: Filter by status (published, draft, all).
@@ -64,9 +79,14 @@ async def export_notes_csv(status: str = "published") -> Response:
 
 
 @router.get("/export/json")
-async def export_notes_json(status: str = "published") -> Response:
+async def export_notes_json(
+    status: str = "published",
+    _: EntitlementResult = Depends(require_feature(Feature.EXPORT_JSON)),
+) -> Response:
     """
     Export all tasting notes as JSON.
+
+    Requires PRO tier or higher.
 
     Args:
         status: Filter by status (published, draft, all).

@@ -5,7 +5,7 @@ import logging
 from typing import Any
 
 from wine_agent.core.schema import TastingNote
-from wine_agent.services.ai.client import AIClient, AIProvider, GenerationResult
+from wine_agent.services.ai.client import AIClient, AIProvider, GenerationResult, sanitize_ai_response
 from wine_agent.services.ai.prompts import (
     SYSTEM_PROMPT,
     build_conversion_prompt,
@@ -154,9 +154,13 @@ class OpenAIClient(AIClient):
                 repair_attempts=repair_attempts,
             )
 
-        # Step 2: Validate against Pydantic model
+        # Step 2: Sanitize nulls to empty strings before Pydantic validation
+        # The AI often returns null for optional string fields, but our schema expects ""
+        sanitized_json = sanitize_ai_response(parsed_json)
+
+        # Step 3: Validate against Pydantic model
         try:
-            tasting_note = TastingNote.model_validate(parsed_json)
+            tasting_note = TastingNote.model_validate(sanitized_json)
             return GenerationResult(
                 success=True,
                 raw_response=raw_response,

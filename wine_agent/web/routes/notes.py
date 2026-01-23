@@ -92,12 +92,21 @@ async def draft_detail(request: Request, note_id: str) -> HTMLResponse:
     Returns:
         Rendered draft note template.
     """
+    logger.info(f"Loading draft note: {note_id}")
     with get_session() as session:
         note_repo = TastingNoteRepository(session)
         note = note_repo.get_by_id(note_id)
 
         if note is None:
+            logger.warning(f"Draft note not found: {note_id}")
             raise HTTPException(status_code=404, detail="Tasting note not found")
+
+        logger.info(
+            f"Loaded draft note: id={note.id}, "
+            f"producer='{note.wine.producer}', "
+            f"cuvee='{note.wine.cuvee}', "
+            f"source={note.source.value}"
+        )
 
         # Get associated inbox item if exists
         inbox_item = None
